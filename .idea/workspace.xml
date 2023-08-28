@@ -5,17 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1a9b5aa6-413f-4698-84f9-7d9adadc1ed0" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/dtu/compute/simple/Example.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/dtu/compute/simple/Other.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/dtu/compute/util/Utils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/dependencies/java/dtu/deps/tricky/Tricky.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/dependencies/java/dtu/deps/util/Utils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/dtu/compute/simple/Example.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencies/java/dtu/deps/simple/Example.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/dtu/compute/simple/Other.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencies/java/dtu/deps/simple/Other.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/dtu/compute/util/Utils.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,7 +42,8 @@
   "keyToString": {
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true"
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "last_opened_file_path": "/Users/chrg/IdeaProjects/course-02242-examples"
   }
 }]]></component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />

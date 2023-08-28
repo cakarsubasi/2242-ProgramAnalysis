@@ -1,12 +1,12 @@
-package dtu.compute.simple;
+package dtu.deps.simple;
 
 // Known Dependencies
-// -> dtu.compute.util.Utils
+// -> dtu.deps.util.Utils
 // -> java.lang.String
 
 public class Other {
 
     public static void main(String[] args) {
-        dtu.compute.util.Utils.printHello();
+        dtu.deps.util.Utils.printHello();
     }
 }

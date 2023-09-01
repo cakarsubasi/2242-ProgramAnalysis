@@ -9,6 +9,7 @@ MULTI_LINE_COMMENT = r"/\*(?:.*\n)*.*\*/"
 FOLDER_IMPORTS = r"(?:import\s+)(.*\.\w+)\.\*;"
 FILE_IMPORTS = r"(?:import\s+)(.*\.\w+);"
 CLASS_OR_INTERFACE_NAME = r"(?:class|interface)\s+(\w+)"
+INSTANCE_CREATION = r"new\s+(\w+)\([\w,]*\);"
 
 def find_files() -> Dict[str, str]:
     file_names = glob("**/*.java", recursive=True)
@@ -34,7 +35,7 @@ def delete_comments(str: str) -> str:
     str = re.sub(MULTI_LINE_COMMENT, "", str, count=0)
     return str
 
-def find_imports_through_folders(str: str, file_names: List(str)):
+def find_imports_through_folders(str: str, file_names: List[str]):
     matches = re.findall(FOLDER_IMPORTS, str)
     result = set()
     for match in matches:
@@ -43,7 +44,7 @@ def find_imports_through_folders(str: str, file_names: List(str)):
                 result.add(file_name)
     return result
 
-def find_imports_through_package(package_name: str, file_names: List(str)):
+def find_imports_through_package(package_name: str, file_names: List[str]):
     result = set()
     for file_name in file_names:
         if file_name.startswith(package_name):
@@ -52,28 +53,38 @@ def find_imports_through_package(package_name: str, file_names: List(str)):
 
 def find_file_imports(str: str):
     matches = re.findall(FILE_IMPORTS, str)
-    return matches
+    return set(matches)
+
+def find_instance_creations(str: str):
+    matches = re.findall(INSTANCE_CREATION, str)
+    return set(matches)
 
 def find_declarations(str: str):
     matches = re.findall(CLASS_OR_INTERFACE_NAME, str)
-    return matches
+    return set(matches)
 
+def find_dependency_from_imports(class_names, class_declarations, imported_files):
+    result = set()
+    for class_name in class_names:
+        for imported_file in imported_files:
+            for declaration in class_declarations[imported_file]:
+                if declaration == class_name:
+                    result.add(imported_file)
+    return result
 
 def main():
-    # When working with a file/class/interface name we use the fully qualified name
+    # When working with a file name we use the fully qualified name
     file_content = find_files() # K: file name, V: contents with package name
-    file_depends = {} # K: file name, V: list of dependencies
-    class_declarations = {} # K: declaration, V: file name
+    file_depends = {} # K: file name, V: set of dependencies
+    class_declarations = {} # K: file name, V: set declarations
     imported_files = {} # K: file name, V: set of imported files (Including itself)
 
     for k, v in file_content.items():
         file_content[k] = delete_comments(v)
 
     for k, v in file_content.items():
-        package_name = get_package_name(k)
         declarations = find_declarations(v)
-        for declaration in declarations:
-            class_declarations[f"{package_name}.{declaration}"] = k # Fully qualified
+        class_declarations[k] = declarations
 
     for k, v in file_content.items():
         folder_imports = find_imports_through_folders(v, file_content.keys())
@@ -82,6 +93,11 @@ def main():
 
     for k, v in file_content.items():
         file_depends[k] = find_file_imports(v)
+
+    for k, v in file_content.items():
+        classes = find_instance_creations(v)
+        dependencies = find_dependency_from_imports(classes, class_declarations, imported_files)
+        file_depends[k] = file_depends[k].union(dependencies)
 
     for k, v in file_content.items():
         print(k)

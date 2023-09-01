@@ -8,6 +8,7 @@ DEFAULT_DECLARATIONS = ["String", "Integer", "Boolean", "Double", "Float", "Numb
 PACKAGE_NAME = r"(?:package\s*)(.*\.\w+);"
 FILE_NAME = r"(\w+)\.java"
 SINGLE_LINE_COMMENT = r"//.*"
+INLINE_COMMENT = r"\/\*(?:.*)\*\/"
 MULTI_LINE_COMMENT = r"/\*(?:.*\n)*.*\*/"
 FOLDER_IMPORTS = r"(?:import\s+)(.*\.\w+)\.\*;"
 FILE_IMPORTS = r"(?:import\s+)(.*\.\w+);"
@@ -15,7 +16,6 @@ CLASS_OR_INTERFACE_NAME = r"(?:class|interface)\s+(\w+)"
 INSTANCE_CREATION = r"\snew\s+(\w+)\([\w,]*\);"
 GENERIC_TYPES = r"(\w+)\s*<\s*(\w*)\s*>(?!\s+\w+\s+\w+)"
 ARRAY_DECLARATIONS = r"(\w+)\s*(?:\[\])+\s*(?:\w+)"
-
 
 def find_files() -> Dict[str, str]:
     file_names = glob("**/*.java", recursive=True)
@@ -37,6 +37,9 @@ def find_files() -> Dict[str, str]:
 def get_package_name(file_name: str) -> str:
     return ".".join(file_name.split(".")[0:-1])
 
+def construct_class_name_regex(class_names: Set[str]) -> str:
+    re = r"\b(" + "|".join(class_names) + r")\s+\w+"
+    return re
 
 def create_graphviz_text(file_depends: Dict[str, Set[str]]):
     result = "digraph SourceGraph {"
@@ -51,6 +54,7 @@ def create_graphviz_text(file_depends: Dict[str, Set[str]]):
 
 def delete_comments(str: str) -> str:
     str = re.sub(SINGLE_LINE_COMMENT, "", str, count=0)
+    str = re.sub(INLINE_COMMENT, "", str, count=0)
     str = re.sub(MULTI_LINE_COMMENT, "", str, count=0)
     return str
 
@@ -129,7 +133,13 @@ def main():
         file_depends[k] = find_file_imports(v)
 
     for k, v in file_content.items():
-        for regex in [INSTANCE_CREATION, GENERIC_TYPES, ARRAY_DECLARATIONS]:
+        class_names = set()
+        imports = imported_files[k]
+        for imported in imports:
+            class_names = class_names.union(class_declarations[imported])
+        dynamic_class_regex = construct_class_name_regex(class_names)
+
+        for regex in [INSTANCE_CREATION, GENERIC_TYPES, ARRAY_DECLARATIONS, dynamic_class_regex]:
             matches = find_none_empty_matches_types(regex, v)
             dependencies = find_dependency_from_imports(matches, class_declarations, imported_files[k])
             file_depends[k] = file_depends[k].union(dependencies)

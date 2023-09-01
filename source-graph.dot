@@ -1,10 +1,33 @@
+// digraph SourceGraph {
+//   "dtu.deps.util.Utils" [label="dtu.deps.util.Utils"];
+//   "dtu.deps.tricky.Tricky" [label="dtu.deps.tricky.Tricky"];
+//   "dtu.deps.simple.Example" [label="dtu.deps.simple.Example"];
+//   "dtu.deps.simple.Other" [label="dtu.deps.simple.Other"];
+//   "dtu.deps.normal.Primes" [label="dtu.deps.normal.Primes"];
+//   "dtu.deps.tricky.Tricky" -> "dtu.deps.simple.Example";
+//   "dtu.deps.simple.Example" -> "dtu.deps.util.Utils";
+//   "dtu.deps.simple.Example" -> "dtu.deps.simple.Other";
+//   "dtu.deps.normal.Primes" -> "java.util.List";
+//   "dtu.deps.normal.Primes" -> "java.util.ArrayList";
+//   "dtu.deps.normal.Primes" -> "java.util.Iterator";
+//   "dtu.deps.normal.Primes" -> "java.lang.Integer";
+// }
+
+
 digraph SourceGraph {
+  "dtu.deps.util.Utils" [label="dtu.deps.util.Utils"];
+  "dtu.deps.tricky.Tricky" [label="dtu.deps.tricky.Tricky"];
   "dtu.deps.simple.Example" [label="dtu.deps.simple.Example"];
   "dtu.deps.simple.Other" [label="dtu.deps.simple.Other"];
-  "dtu.deps.tricky.Tricky" [label="dtu.deps.tricky.Tricky"];
-  "dtu.deps.util.Utils" [label="dtu.deps.util.Utils"];
+  "dtu.deps.normal.Primes" [label="dtu.deps.normal.Primes"];
+  "dtu.deps.tricky.Tricky" -> "dtu.deps.simple.Example";
   "dtu.deps.simple.Example" -> "dtu.deps.util.Utils";
   "dtu.deps.simple.Example" -> "dtu.deps.simple.Other";
-  "dtu.deps.tricky.Tricky" -> "dtu.deps.simple.Example";
-  "dtu.deps.tricky.Tricky" -> "dtu.deps.simple.Other";
+  "dtu.deps.simple.Example" -> "java.lang.String";
+  "dtu.deps.simple.Other" -> "java.lang.String";
+  "dtu.deps.normal.Primes" -> "java.lang.Integer";
+  "dtu.deps.normal.Primes" -> "java.util.ArrayList";
+  "dtu.deps.normal.Primes" -> "java.util.Iterator";
+  "dtu.deps.normal.Primes" -> "java.lang.String";
+  "dtu.deps.normal.Primes" -> "java.util.List";
 }

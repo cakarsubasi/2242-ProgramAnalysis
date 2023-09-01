@@ -4,8 +4,7 @@ import re
 
 SINGLE_LINE = r"//.*"
 MULTI_LINE = r"/\*(?:.*\n)*.*\*/"
-FILE_IMPORTS = r"import .*\.\w+;"
-FILE_IMPORTS2 = "(?:import\s*)(.*\.\w+);"
+FILE_IMPORTS = "(?:import\s*)(.*\.\w+);"
 CLASS_OR_INTERFACE_NAME = "(?:class|interface)\s+(\w+)"
 
 def find_files() -> Dict[str, str]:
@@ -30,7 +29,7 @@ def delete_strings(str: str) -> str:
     pass
 
 def matching_imports(str: str):
-    matches = re.findall(FILE_IMPORTS2, str)
+    matches = re.findall(FILE_IMPORTS, str)
     return matches
 
 def matching_declarations(str: str):

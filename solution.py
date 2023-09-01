@@ -2,8 +2,8 @@ from glob import glob
 from typing import List, Dict, Tuple
 import re
 
-SINGLE_LINE = r"//.*"
-MULTI_LINE = r"/\*(?:.*\n)*.*\*/"
+SINGLE_LINE_COMMENT = r"//.*"
+MULTI_LINE_COMMENT = r"/\*(?:.*\n)*.*\*/"
 FILE_IMPORTS = "(?:import\s*)(.*\.\w+);"
 CLASS_OR_INTERFACE_NAME = "(?:class|interface)\s+(\w+)"
 
@@ -21,8 +21,8 @@ def fix_file_name():
     pass
 
 def delete_comments(str: str) -> str:
-    str = re.sub(SINGLE_LINE, "", str, count=0)
-    str = re.sub(MULTI_LINE, "", str, count=0)
+    str = re.sub(SINGLE_LINE_COMMENT, "", str, count=0)
+    str = re.sub(MULTI_LINE_COMMENT, "", str, count=0)
     return str
 
 def delete_strings(str: str) -> str:

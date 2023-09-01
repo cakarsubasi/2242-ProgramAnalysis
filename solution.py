@@ -2,20 +2,28 @@ from glob import glob
 from typing import List, Dict, Tuple
 import re
 
+PACKAGE_NAME = r"(?:package\s*)(.*\.\w+);"
+FILE_NAME = r"(\w+)\.java"
 SINGLE_LINE_COMMENT = r"//.*"
 MULTI_LINE_COMMENT = r"/\*(?:.*\n)*.*\*/"
-FILE_IMPORTS = "(?:import\s*)(.*\.\w+);"
-CLASS_OR_INTERFACE_NAME = "(?:class|interface)\s+(\w+)"
+FILE_IMPORTS = r"(?:import\s*)(.*\.\w+);"
+CLASS_OR_INTERFACE_NAME = r"(?:class|interface)\s+(\w+)"
 
 def find_files() -> Dict[str, str]:
     file_names = glob("**/*.java", recursive=True)
-    file_content: Dict[str, str] = {}
+    files: Dict[str, str] = {}
 
     for file in file_names:
         with open(file) as fp:
-            file_content[file] = fp.read()
+            # ASSUMPTION: We are only working with files that have a package line
+            # https://docs.oracle.com/javase%2Ftutorial%2F/java/package/createpkgs.html
+            first_line = fp.readline()
+            package_name = re.findall(PACKAGE_NAME, first_line)[0]
+            file_name = re.findall(FILE_NAME, file)[0]
+            content = fp.read()
+            files[f"{package_name}.{file_name}"] = content
 
-    return file_content
+    return files
 
 def fix_file_name():
     pass
@@ -38,16 +46,17 @@ def matching_declarations(str: str):
 
 
 def main():
-    file_content = find_files() # K: file name, V: contents
+    # When working with a file/class/interface name we use the fully qualified name
+    file_content = find_files() # K: file name, V: contents with package name
     file_depends = {} # K: file name, V: list of dependencies
-    class_declarations = {} # K: declaration (fully qualified), V: file name
+    class_declarations = {} # K: declaration, V: file name
 
     for k, v in file_content.items():
         file_content[k] = delete_comments(v)
 
     for k, v in file_content.items():
         file_depends[k] = matching_imports(v)
-        matches = matching_declarations(v, k)
+        matches = matching_declarations(v)
         for match in matches:
             class_declarations[match] = k # Fully qualified
 

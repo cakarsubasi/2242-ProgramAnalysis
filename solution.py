@@ -1,5 +1,5 @@
 from glob import glob
-from typing import List, Dict, Tuple
+from typing import List, Dict
 import re
 
 PACKAGE_NAME = r"(?:package\s*)(.*\.\w+);"
@@ -34,10 +34,7 @@ def delete_comments(str: str) -> str:
     str = re.sub(MULTI_LINE_COMMENT, "", str, count=0)
     return str
 
-def delete_strings(str: str) -> str:
-    pass
-
-def find_imports_through_folders(str: str, file_names: [str]):
+def find_imports_through_folders(str: str, file_names: List(str)):
     matches = re.findall(FOLDER_IMPORTS, str)
     result = set()
     for match in matches:
@@ -46,7 +43,7 @@ def find_imports_through_folders(str: str, file_names: [str]):
                 result.add(file_name)
     return result
 
-def find_imports_through_package(package_name: str, file_names: [str]):
+def find_imports_through_package(package_name: str, file_names: List(str)):
     result = set()
     for file_name in file_names:
         if file_name.startswith(package_name):

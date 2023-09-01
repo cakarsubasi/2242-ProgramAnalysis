@@ -38,8 +38,10 @@ def get_package_name(file_name: str) -> str:
     return ".".join(file_name.split(".")[0:-1])
 
 def construct_class_name_regex(class_names: Set[str]) -> str:
-    re = r"\b(" + "|".join(class_names) + r")\s+\w+"
-    return re
+    return r"\b(" + "|".join(class_names) + r")\s+\w+"
+
+def construct_generic_regex_finder(class_names: Set[str]) -> str:
+    return fr"<({'|'.join(class_names)}(?:,\s*(?:{'|'.join(class_names)}))*)>\s+\w+\s+\w+\((\w+\s+\w+(?:,\s*\w+\s+\w+)*)\)"
 
 def create_graphviz_text(file_depends: Dict[str, Set[str]]):
     result = "digraph SourceGraph {"
@@ -133,16 +135,40 @@ def main():
         file_depends[k] = find_file_imports(v)
 
     for k, v in file_content.items():
+        for regex in [INSTANCE_CREATION, GENERIC_TYPES, ARRAY_DECLARATIONS]:
+            matches = find_none_empty_matches_types(regex, v)
+            dependencies = find_dependency_from_imports(matches, class_declarations, imported_files[k])
+            file_depends[k] = file_depends[k].union(dependencies)
+
+    for k, v in file_content.items():
         class_names = set()
         imports = imported_files[k]
         for imported in imports:
             class_names = class_names.union(class_declarations[imported])
+        
         dynamic_class_regex = construct_class_name_regex(class_names)
+        generic_regex = construct_generic_regex_finder(class_names)
 
-        for regex in [INSTANCE_CREATION, GENERIC_TYPES, ARRAY_DECLARATIONS, dynamic_class_regex]:
-            matches = find_none_empty_matches_types(regex, v)
-            dependencies = find_dependency_from_imports(matches, class_declarations, imported_files[k])
-            file_depends[k] = file_depends[k].union(dependencies)
+        dynamic_matches = find_none_empty_matches_types(dynamic_class_regex, v)
+        generic_matches = re.findall(generic_regex, v)
+        shadowing = set()
+        for group in generic_matches:
+            if len(group) < 2:
+                continue
+            
+            generics = list(map(lambda x: x.strip(), group[0].split(",")))
+            parameters = list(map(lambda x: x.strip().split(" ")[0].strip(), group[1].split(",")))
+            for generic in generics:
+                for parameter in parameters:
+                    if generic == parameter:
+                        shadowing.add(generic)
+        
+        for shadow in shadowing:
+            dynamic_matches.discard(shadow)
+
+        dependencies = find_dependency_from_imports(dynamic_matches, class_declarations, imported_files[k])
+        file_depends[k] = file_depends[k].union(dependencies)
+
 
     for k, v in file_depends.items():
         file_depends[k].discard(k)

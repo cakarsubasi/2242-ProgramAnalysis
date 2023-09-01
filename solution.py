@@ -6,8 +6,8 @@ PACKAGE_NAME = r"(?:package\s*)(.*\.\w+);"
 FILE_NAME = r"(\w+)\.java"
 SINGLE_LINE_COMMENT = r"//.*"
 MULTI_LINE_COMMENT = r"/\*(?:.*\n)*.*\*/"
-FOLDER_IMPORTS = r"(?:import\s*)(.*\.\w+)\.\*;"
-FILE_IMPORTS = r"(?:import\s*)(.*\.\w+);"
+FOLDER_IMPORTS = r"(?:import\s+)(.*\.\w+)\.\*;"
+FILE_IMPORTS = r"(?:import\s+)(.*\.\w+);"
 CLASS_OR_INTERFACE_NAME = r"(?:class|interface)\s+(\w+)"
 
 def find_files() -> Dict[str, str]:

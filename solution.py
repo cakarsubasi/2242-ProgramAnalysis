@@ -36,11 +36,11 @@ def delete_comments(str: str) -> str:
 def delete_strings(str: str) -> str:
     pass
 
-def matching_imports(str: str):
+def find_file_imports(str: str):
     matches = re.findall(FILE_IMPORTS, str)
     return matches
 
-def matching_declarations(str: str):
+def find_declarations(str: str):
     matches = re.findall(CLASS_OR_INTERFACE_NAME, str)
     return matches
 
@@ -55,10 +55,13 @@ def main():
         file_content[k] = delete_comments(v)
 
     for k, v in file_content.items():
-        file_depends[k] = matching_imports(v)
-        matches = matching_declarations(v)
-        for match in matches:
-            class_declarations[match] = k # Fully qualified
+        file_depends[k] = find_file_imports(v)
+
+    for k, v in file_content.items():
+        package_name = ".".join(k.split(".")[0:-1])
+        declarations = find_declarations(v)
+        for declaration in declarations:
+            class_declarations[f"{package_name}.{declaration}"] = k # Fully qualified
 
     for k, v in file_content.items():
         print(k)

@@ -55,13 +55,13 @@ def main():
         file_content[k] = delete_comments(v)
 
     for k, v in file_content.items():
-        file_depends[k] = find_file_imports(v)
-
-    for k, v in file_content.items():
         package_name = ".".join(k.split(".")[0:-1])
         declarations = find_declarations(v)
         for declaration in declarations:
             class_declarations[f"{package_name}.{declaration}"] = k # Fully qualified
+
+    for k, v in file_content.items():
+        file_depends[k] = find_file_imports(v)
 
     for k, v in file_content.items():
         print(k)

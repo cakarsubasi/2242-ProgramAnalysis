@@ -1,0 +1,10 @@
+digraph SourceGraph {
+  "dtu.deps.simple.Example" [label="dtu.deps.simple.Example"];
+  "dtu.deps.simple.Other" [label="dtu.deps.simple.Other"];
+  "dtu.deps.tricky.Tricky" [label="dtu.deps.tricky.Tricky"];
+  "dtu.deps.util.Utils" [label="dtu.deps.util.Utils"];
+  "dtu.deps.simple.Example" -> "dtu.deps.util.Utils";
+  "dtu.deps.simple.Example" -> "dtu.deps.simple.Other";
+  "dtu.deps.tricky.Tricky" -> "dtu.deps.simple.Example";
+  "dtu.deps.tricky.Tricky" -> "dtu.deps.simple.Other";
+}

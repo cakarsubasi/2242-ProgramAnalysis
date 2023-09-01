@@ -1,5 +1,5 @@
 from glob import glob
-from typing import List, Dict
+from typing import List, Dict, Set
 import re
 
 PACKAGE_NAME = r"(?:package\s*)(.*\.\w+);"
@@ -72,6 +72,16 @@ def find_dependency_from_imports(class_names, class_declarations, imported_files
                     result.add(imported_file)
     return result
 
+def create_graphviz_text(file_depends: Dict[str, Set[str]]):
+    result = "digraph SourceGraph {"
+    for file_name in file_depends.keys():
+        result += f"""\n  "{file_name}" [label="{file_name}"];"""
+    for file_name, dependencies in file_depends.items():
+        for depedency in dependencies:
+            result += f"""\n  "{file_name}" -> "{depedency}";"""
+    result += "\n}"
+    return result
+
 def main():
     # When working with a file name we use the fully qualified name
     file_content = find_files() # K: file name, V: contents with package name
@@ -99,12 +109,10 @@ def main():
         dependencies = find_dependency_from_imports(classes, class_declarations, imported_files)
         file_depends[k] = file_depends[k].union(dependencies)
 
-    for k, v in file_content.items():
-        print(k)
-        print(v)
+    for k, v in file_depends.items():
+        file_depends[k].discard(k)
 
-    print(file_depends)
-    print(class_declarations)
+    print(create_graphviz_text(file_depends))
 
 
 if __name__ == "__main__":

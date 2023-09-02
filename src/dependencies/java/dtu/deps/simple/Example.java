@@ -17,6 +17,8 @@ import dtu.deps.util.Utils;
 public class Example {
     Other other = new Other();
 
+    String s = "System.out.println('Hello')";
+
     public static void main(String[] args) {
         Utils.printHello();
     }

@@ -4,7 +4,7 @@ import re
 
 # https://docs.oracle.com/javase/8/docs/api/java/lang/package-summary.html
 DEFAULT_DECLARATIONS = ["String", "Integer", "Boolean", "Double", "Float", "Number", "Character", "Byte", "Short"]
-
+JAVA_SYSTEM_CLASS = "System"
 PACKAGE_NAME = r"(?:package\s*)(.*\.\w+);"
 FILE_NAME = r"(\w+)\.java"
 STATIC_METHOD_NAME = r"static\s+\w+\s+(\w+)"
@@ -47,6 +47,9 @@ def construct_generic_regex_finder(class_names: Set[str]) -> str:
 
 def construct_static_method_regex(function_names: Set[str]) -> str:
     return r"\b(" + "|".join(function_names) + r")\s*\("
+
+def construct_java_system_regex(system_class: str) -> str:
+    return r"(?:"+JAVA_SYSTEM_CLASS+".\w+)"
     
 
 def create_graphviz_text(file_depends: Dict[str, Set[str]]):
@@ -136,6 +139,19 @@ def find_generics_that_are_shadowing(generic_regex: str, content: str) -> Set[st
                     shadowing.add(generic)
     return shadowing
 
+def find_java_system_dependency(regex: str, content : str) :
+    result = set()
+
+    # Workaround for System. in string
+    copy = content
+    copy = re.sub(STRINGS, '""', copy, count=0)
+
+    match = re.search(regex, copy)
+
+    if (match != None):
+        result.add("java.lang.System")
+
+    return set(result)
 
 def main():
     # When working with a file name we use the fully qualified name
@@ -175,6 +191,12 @@ def main():
             dependencies = find_dependency_from_imports(matches, class_declarations, imported_files[k])
             file_depends[k] = file_depends[k].union(dependencies)
 
+    for k,v in file_content.items():
+        dependencies = find_java_system_dependency(construct_java_system_regex(JAVA_SYSTEM_CLASS), v)
+
+        if (len(dependencies) != 0):
+            file_depends[k] = file_depends[k].union(dependencies)
+
     for k, v in file_content.items():
         class_names = set()
         imports = imported_files[k]
@@ -202,7 +224,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-## like this List <foo> -> is not working
-## same List< foo >
-## if ( a < b && b > c)

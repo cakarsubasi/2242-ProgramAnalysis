@@ -5,14 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="1a9b5aa6-413f-4698-84f9-7d9adadc1ed0" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/dependencies/java/dtu/deps/tricky/Tricky.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/dependencies/java/dtu/deps/util/Utils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/dtu/compute/simple/Example.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencies/java/dtu/deps/simple/Example.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/dtu/compute/simple/Other.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencies/java/dtu/deps/simple/Other.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/dtu/compute/util/Utils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/dependencies/java/dtu/deps/tricky/Tricky.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/dependencies/java/dtu/deps/tricky/Tricky.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -32,6 +27,9 @@
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
   <component name="ProjectId" id="2UNucx7XF5iVgZgxj71XkWzQtDg" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
@@ -43,7 +41,19 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "last_opened_file_path": "/Users/chrg/IdeaProjects/course-02242-examples"
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/home/arkeo/dtu/02242_Analysis/course-02242-examples",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
@@ -54,8 +64,13 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1692792444682</updated>
+      <workItem from="1693226138794" duration="6616000" />
+      <workItem from="1693569826651" duration="734000" />
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">

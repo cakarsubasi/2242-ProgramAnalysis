@@ -1,13 +1,11 @@
-use tree_sitter::{Parser, Language, Node};
+use tree_sitter::{Parser, Node, TreeCursor};
 use glob::glob;
 use std::io::prelude::*;
 use std::fs::File;
-use std::marker::PhantomData;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::env;
-use regex;
+use std::fmt::Debug;
 
-#[derive(Debug)]
 struct JavaClass {
     // class package
     pub package: String,
@@ -25,11 +23,19 @@ struct JavaClass {
     // field dependencies
     pub fields: Vec<String>,
     // non-static inner classes
-    pub composition: Vec<String>,
+    //pub composition: Vec<String>,
+    // It should really be like this:
+    pub composition: Vec<Box<JavaClass>>,
     // all other dependencies
     pub dependencies: Vec<String>,
     // text
     pub text: String,
+}
+
+impl Debug for JavaClass {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("JavaClass").field("package", &self.package).field("name", &self.name).field("superclass", &self.superclass).field("implements", &self.implements).field("fields", &self.fields).field("composition", &self.composition).field("dependencies", &self.dependencies).finish()
+    }
 }
 
 impl JavaClass {
@@ -46,29 +52,61 @@ impl JavaClass {
         }
     }
 
-    fn from_tree(tree: tree_sitter::Tree, text: &str) -> Self {
+    fn new_from_tree(root_node: &Node, text: &str) -> Self {
         let mut java_class = Self::new(text);
-        let mut cursor = tree.walk();
-        //cursor.goto_first_child();
+        java_class.from_tree(root_node);
+        java_class
+    }
+
+    fn from_tree(&mut self, root_node: &Node) {
+        let mut cursor = root_node.walk();
         println!("{}", cursor.node().kind());
 
-        loop {
-            if java_class.match_grammar(&mut cursor.node()) {
-                cursor.goto_first_child(); continue;
-            }
-            if !cursor.goto_next_sibling() {
-                break;
-            }
-        }
+        //loop {
+        //    if java_class.match_grammar(&mut cursor.node()) {
+        //        cursor.goto_first_child(); continue;
+        //    }
+        //    if !cursor.goto_next_sibling() {
+        //        break;
+        //    }
+        //}
+        self.recursive_search(&mut cursor);
 
         // field_declaration (just use a regex)
 
-        java_class
+        println!("{:#?}", self);
+    }
+
+    fn recursive_search_entry(&mut self, cursor: &mut TreeCursor) {
+        let entry = cursor.node();
+        cursor.goto_first_child();
+
+    }
+
+    fn recursive_search_comprehensive(&mut self, cursor: &mut TreeCursor, term: &Node) {
+        if cursor.node() == *term {
+            return;
+        }
+        while self.match_grammar(&mut cursor.node()) {
+            cursor.goto_first_child(); self.recursive_search_comprehensive(cursor, term)
+        }
+        if !cursor.goto_next_sibling() {
+            
+        }
+    }
+
+    fn recursive_search(&mut self, cursor: &mut TreeCursor) {
+        while self.match_grammar(&mut cursor.node()) {
+            cursor.goto_first_child(); self.recursive_search(cursor)
+        }
+        if cursor.goto_next_sibling() {
+            self.recursive_search(cursor);
+        } 
     }
 
     ///
     /// @return: whether to continue searching
-    fn match_grammar(&mut self, node: &tree_sitter::Node) -> bool {
+    fn match_grammar(&mut self, node: &Node) -> bool {
         match node.kind() {
             "program" => true,
             "package_declaration" => {self.retrieve_package(node); false}
@@ -94,10 +132,14 @@ impl JavaClass {
         println!("{}", self.get_phrase_from_node(node));
         for node in node.children(&mut node.walk()) {
             match node.kind() {
-                scoped_identifier => {}
+                "package" => {}
+                "scoped_identifier" => { 
+                    let s = self.get_phrase_from_node(&node).to_owned();
+                    self.package = s;
+                    break;
+                }
                 _ => {
-                    eprintln!("{}", node.kind());
-                    eprintln!("{}", self.get_phrase_from_node(&node));
+                    eprintln!("package: {} : {}", node.kind(), self.get_phrase_from_node(&node));
                 }
             }
         }
@@ -107,11 +149,36 @@ impl JavaClass {
         // find the first identifier
         println!("Found class name!");
         println!("{}", self.get_phrase_from_node(node));
-        for node in node.children(&mut node.walk()) {
-            match node.kind() {
-                _ => {
-                    eprintln!("{} : {}", node.kind(), self.get_phrase_from_node(&node));
+        match self.name {
+            // first class
+            None => {
+                for node in node.children(&mut node.walk()) {
+                    match node.kind() {
+                        "class" => {}
+                        //"modifiers" => {}
+                        "identifier" => {
+                            let s = self.get_phrase_from_node(&node).to_owned();
+                            self.name = match self.name {
+                                Some(_) => panic!("Whoops, two identifiers"),
+                                None => Some(s),
+                            };
+                            break;
+                        }
+                        "class_body" => break,
+                        _ => {
+                            eprintln!("class_name: {} : {}", node.kind(), self.get_phrase_from_node(&node));
+                        }
+                    }
                 }
+            }
+            // inner classes
+            Some(_) => {
+                let mut inner_class = JavaClass::new(&self.text);
+                inner_class.package.push_str(&self.package);
+                inner_class.package.push_str(".");
+                inner_class.package.push_str(&self.name.as_ref().unwrap());
+                inner_class.from_tree(node);
+                self.composition.push(Box::new(inner_class));
             }
         }
 
@@ -123,7 +190,7 @@ impl JavaClass {
         for node in node.children(&mut node.walk()) {
             match node.kind() {
                 _ => {
-                    eprintln!("{} : {}", node.kind(), self.get_phrase_from_node(&node));
+                    eprintln!("import: {} : {}", node.kind(), self.get_phrase_from_node(&node));
                 }
             }
         }
@@ -135,7 +202,7 @@ impl JavaClass {
         for node in node.children(&mut node.walk()) {
             match node.kind() {
                 _ => {
-                    eprintln!("{} : {}", node.kind(), self.get_phrase_from_node(&node));
+                    eprintln!("field: {} : {}", node.kind(), self.get_phrase_from_node(&node));
                 }
             }
         }
@@ -200,14 +267,14 @@ pub fn run() {
     let mut java_classes = vec![];
 
     let files = find_all_java_files(&directory);
-    let mut text = String::new();
     for file_name in files {
+        let mut text = String::new();
         let mut file = File::open(&file_name).unwrap();
         file.read_to_string(&mut text).unwrap();
         let tree = parser.parse(&text, None).unwrap();
         println!("{}", file_name.display());
 
-        java_classes.push(JavaClass::from_tree(tree, &text));
+        java_classes.push(JavaClass::new_from_tree(&tree.root_node(), &text));
     }
 
     let mut dot = File::create("diagram.dot").unwrap();

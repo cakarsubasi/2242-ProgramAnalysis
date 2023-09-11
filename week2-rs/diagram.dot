@@ -1,0 +1,233 @@
+[
+    JavaClass {
+        package: "dtu.deps.extra",
+        name: Some(
+            "Base",
+        ),
+        superclass: None,
+        implements: [],
+        fields: [
+            Field {
+                java_type: IdentifiedType(
+                    "String",
+                ),
+                field: "name",
+            },
+        ],
+        composition: [],
+        dependencies: [],
+    },
+    JavaClass {
+        package: "dtu.deps.extra",
+        name: Some(
+            "First",
+        ),
+        superclass: None,
+        implements: [],
+        fields: [],
+        composition: [],
+        dependencies: [],
+    },
+    JavaClass {
+        package: "dtu.deps.extra",
+        name: Some(
+            "Hoarder",
+        ),
+        superclass: None,
+        implements: [],
+        fields: [],
+        composition: [],
+        dependencies: [],
+    },
+    JavaClass {
+        package: "dtu.deps.extra",
+        name: None,
+        superclass: None,
+        implements: [],
+        fields: [],
+        composition: [],
+        dependencies: [],
+    },
+    JavaClass {
+        package: "dtu.deps.extra",
+        name: Some(
+            "Pregnant",
+        ),
+        superclass: None,
+        implements: [],
+        fields: [
+            Field {
+                java_type: IntegralType(
+                    "int",
+                ),
+                field: "weight",
+            },
+        ],
+        composition: [
+            JavaClass {
+                package: "dtu.deps.extra.Pregnant",
+                name: Some(
+                    "Inside",
+                ),
+                superclass: None,
+                implements: [],
+                fields: [
+                    Field {
+                        java_type: IntegralType(
+                            "int",
+                        ),
+                        field: "weight",
+                    },
+                ],
+                composition: [],
+                dependencies: [],
+            },
+        ],
+        dependencies: [],
+    },
+    JavaClass {
+        package: "dtu.deps.extra",
+        name: Some(
+            "Second",
+        ),
+        superclass: None,
+        implements: [],
+        fields: [],
+        composition: [],
+        dependencies: [],
+    },
+    JavaClass {
+        package: "dtu.deps.generic",
+        name: Some(
+            "Base",
+        ),
+        superclass: None,
+        implements: [],
+        fields: [
+            Field {
+                java_type: IdentifiedType(
+                    "T3",
+                ),
+                field: "member3",
+            },
+        ],
+        composition: [],
+        dependencies: [],
+    },
+    JavaClass {
+        package: "dtu.deps.normal",
+        name: Some(
+            "Primes",
+        ),
+        superclass: None,
+        implements: [],
+        fields: [
+            Field {
+                java_type: IntegralType(
+                    "int",
+                ),
+                field: "current = 2",
+            },
+        ],
+        composition: [
+            JavaClass {
+                package: "dtu.deps.normal.Primes",
+                name: Some(
+                    "PrimesIterator",
+                ),
+                superclass: None,
+                implements: [],
+                fields: [
+                    Field {
+                        java_type: IntegralType(
+                            "int",
+                        ),
+                        field: "current = 2",
+                    },
+                ],
+                composition: [],
+                dependencies: [],
+            },
+        ],
+        dependencies: [
+            "java.util.ArrayList",
+            "java.util.Iterator",
+            "java.util.List",
+        ],
+    },
+    JavaClass {
+        package: "dtu.deps.simple",
+        name: Some(
+            "Example",
+        ),
+        superclass: None,
+        implements: [],
+        fields: [
+            Field {
+                java_type: IdentifiedType(
+                    "Other",
+                ),
+                field: "other = new Other()",
+            },
+        ],
+        composition: [],
+        dependencies: [
+            "dtu.deps.util.Utils",
+        ],
+    },
+    JavaClass {
+        package: "dtu.deps.simple",
+        name: Some(
+            "Other",
+        ),
+        superclass: None,
+        implements: [],
+        fields: [],
+        composition: [],
+        dependencies: [],
+    },
+    JavaClass {
+        package: "dtu.deps.tricky",
+        name: Some(
+            "Tricky",
+        ),
+        superclass: None,
+        implements: [],
+        fields: [
+            Field {
+                java_type: IdentifiedType(
+                    "Tricky",
+                ),
+                field: "dtu",
+            },
+            Field {
+                java_type: IdentifiedType(
+                    "Tricky",
+                ),
+                field: "deps",
+            },
+            Field {
+                java_type: IdentifiedType(
+                    "Tricky",
+                ),
+                field: "simple",
+            },
+        ],
+        composition: [],
+        dependencies: [
+            "dtu.deps.simple.*",
+            "dtu.deps.util.*",
+        ],
+    },
+    JavaClass {
+        package: "dtu.deps.util",
+        name: Some(
+            "Utils",
+        ),
+        superclass: None,
+        implements: [],
+        fields: [],
+        composition: [],
+        dependencies: [],
+    },
+]

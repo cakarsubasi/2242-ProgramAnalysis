@@ -16,11 +16,11 @@ class Definiton():
         self.name = name # Fully qualified
         self.is_static = is_static
         self.is_interface = is_interface
-        self.inheritance : Definiton = None
-        self.realization : List[Definiton] = [] 
-        self.aggregation : List[Tuple[Definiton, str]] = []
-        self.composition : List[Definiton] = []
-        self.dependencies : List[Definiton] = []
+        self.inheritance : Definiton = None # Cem
+        self.realization : List[Definiton] = [] # Cem
+        self.aggregation : List[Tuple[Definiton, str]] = [] # Oliver
+        self.composition : List[Definiton] = [] # Franciszek
+        self.dependencies : List[Definiton] = [] # Franciszek
         self.methods : List[Method] = [] # Maks
         self.file_name : str = "" # Used for classes nested inside other files
 

@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use std::env;
 use std::fmt::Debug;
 
+#[derive(PartialEq, PartialOrd)]
 struct JavaClass {
     // class package
     pub package: String,
@@ -21,20 +22,53 @@ struct JavaClass {
     // implementations
     pub implements: Vec<String>,
     // field dependencies
-    pub fields: Vec<String>,
+    pub fields: Vec<Field>,
     // non-static inner classes
     //pub composition: Vec<String>,
     // It should really be like this:
     pub composition: Vec<Box<JavaClass>>,
     // all other dependencies
-    pub dependencies: Vec<String>,
+    pub imports: Vec<String>,
     // text
     pub text: String,
 }
 
+#[derive(Debug, PartialEq, PartialOrd)]
+struct FieldData {
+    java_type: Option<JavaType>,
+    fields: Vec<String>,
+}
+
+impl Into<Vec<Field>> for FieldData {
+    fn into(self) -> Vec<Field> {
+        let java_type = self.java_type.unwrap();
+        self.fields.into_iter().map(|field| Field { java_type: java_type.to_owned(), field} ).collect()
+    }
+}
+
+#[derive(Debug, PartialEq, PartialOrd)]
+struct Field {
+    java_type: JavaType,
+    field: String,
+}
+
+#[derive(Debug, PartialEq, PartialOrd, Clone)]
+enum JavaType {
+    IntegralType(String),
+    IdentifiedType(String),
+    GenericType(String),
+}
+
 impl Debug for JavaClass {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("JavaClass").field("package", &self.package).field("name", &self.name).field("superclass", &self.superclass).field("implements", &self.implements).field("fields", &self.fields).field("composition", &self.composition).field("dependencies", &self.dependencies).finish()
+        f.debug_struct("JavaClass")
+        .field("package", &self.package)
+        .field("name", &self.name)
+        .field("superclass", &self.superclass)
+        .field("implements", &self.implements)
+        .field("fields", &self.fields)
+        .field("composition", &self.composition)
+        .field("dependencies", &self.imports).finish()
     }
 }
 
@@ -47,7 +81,7 @@ impl JavaClass {
             implements: vec![],
             fields: vec![],
             composition: vec![],
-            dependencies: vec![],
+            imports: vec![],
             text: String::from(text),
         }
     }
@@ -75,24 +109,6 @@ impl JavaClass {
         // field_declaration (just use a regex)
 
         println!("{:#?}", self);
-    }
-
-    fn recursive_search_entry(&mut self, cursor: &mut TreeCursor) {
-        let entry = cursor.node();
-        cursor.goto_first_child();
-
-    }
-
-    fn recursive_search_comprehensive(&mut self, cursor: &mut TreeCursor, term: &Node) {
-        if cursor.node() == *term {
-            return;
-        }
-        while self.match_grammar(&mut cursor.node()) {
-            cursor.goto_first_child(); self.recursive_search_comprehensive(cursor, term)
-        }
-        if !cursor.goto_next_sibling() {
-            
-        }
     }
 
     fn recursive_search(&mut self, cursor: &mut TreeCursor) {
@@ -130,7 +146,7 @@ impl JavaClass {
     fn retrieve_package(&mut self, node: &tree_sitter::Node) {
         println!("Found package!");
         println!("{}", self.get_phrase_from_node(node));
-        for node in node.children(&mut node.walk()) {
+        for node in node.named_children(&mut node.walk()) {
             match node.kind() {
                 "package" => {}
                 "scoped_identifier" => { 
@@ -152,10 +168,10 @@ impl JavaClass {
         match self.name {
             // first class
             None => {
-                for node in node.children(&mut node.walk()) {
+                for node in node.named_children(&mut node.walk()) {
                     match node.kind() {
                         "class" => {}
-                        //"modifiers" => {}
+                        "modifiers" => {}
                         "identifier" => {
                             let s = self.get_phrase_from_node(&node).to_owned();
                             self.name = match self.name {
@@ -187,8 +203,13 @@ impl JavaClass {
     fn retrieve_import(&mut self, node: &Node) {
         println!("Found import!");
         println!("{}", self.get_phrase_from_node(node));
-        for node in node.children(&mut node.walk()) {
+        for node in node.named_children(&mut node.walk()) {
             match node.kind() {
+                "import" => {}
+                "asterisk" => {self.imports.last_mut().unwrap().push_str(".*")}
+                "scoped_identifier" => {
+                    self.imports.push(String::from(self.get_phrase_from_node(&node)));
+                }
                 _ => {
                     eprintln!("import: {} : {}", node.kind(), self.get_phrase_from_node(&node));
                 }
@@ -197,22 +218,45 @@ impl JavaClass {
     }
 
     fn retrieve_field(&mut self, node: &Node) {
+        let mut field_data = FieldData {
+            java_type: None,
+            fields: vec![],
+        };
         println!("Found field!");
         println!("{}", self.get_phrase_from_node(node));
-        for node in node.children(&mut node.walk()) {
+        for node in node.named_children(&mut node.walk()) {
             match node.kind() {
+                ";" | "," => {}
+                "type_identifier" | "integral_type" | "generic_type" => {
+                    let type_text = match field_data.java_type {
+                        None => self.get_phrase_from_node(&node).to_string(),
+                        _ => panic!("Need to change this function to cover this case")
+                    };
+                    field_data.java_type = match node.kind() {
+                        "type_identifier" => Some(JavaType::IdentifiedType(type_text)),
+                        "integral_type" => Some(JavaType::IntegralType(type_text)),
+                        "generic_type" => Some(JavaType::GenericType((type_text))),
+                        _ => { panic!("Uncovered cases.")}
+                    }
+                    
+                }
+                "variable_declarator" => {field_data.fields.push(self.get_phrase_from_node(&node).to_string())}
+                "modifiers" => {}
                 _ => {
                     eprintln!("field: {} : {}", node.kind(), self.get_phrase_from_node(&node));
                 }
             }
         }
+        self.fields = field_data.into();
     }
 
     fn retrieve_interfaces(&mut self, node: &Node) {
         println!("Found interface!");
         println!("{}", self.get_phrase_from_node(node));
-        for node in node.children(&mut node.walk()) {
+        for node in node.named_children(&mut node.walk()) {
             match node.kind() {
+                "implements" => {}
+                "type_list" => { /* TODO */ }
                 _ => {
                     eprintln!("{} : {}", node.kind(), self.get_phrase_from_node(&node));
                 }
@@ -245,7 +289,7 @@ fn get_phrase_from_node<'a>(text: &'a str, node: &tree_sitter::Node) -> &'a str 
 }
 
 fn convert_to_dot(class_descriptions: &Vec<JavaClass>) -> String {
-    todo!()
+    format!("{:#?}", class_descriptions)
 }
 
 pub fn run() {
@@ -279,4 +323,25 @@ pub fn run() {
 
     let mut dot = File::create("diagram.dot").unwrap();
     dot.write_all(convert_to_dot(&java_classes).as_bytes()).expect("failed to write");
+}
+
+mod grammar_test {
+
+    use crate::*;
+
+    #[test]
+    fn test() {
+        let text = &"";
+
+        let result = JavaClass::new(text);
+        assert_eq!(result, JavaClass { 
+            package: todo!(), 
+            name: todo!(), 
+            superclass: todo!(), 
+            implements: todo!(), 
+            fields: todo!(), 
+            composition: todo!(),
+            imports: todo!(), 
+            text: text.to_string() });
+    }
 }

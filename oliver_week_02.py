@@ -1,7 +1,12 @@
 from tree_sitter import Language, Parser, Node
 from glob import glob
-from typing import List, Dict, Set, Tuple
+from typing import List, Dict, Set, Tuple, Optional, Any
 import re
+from enum import Enum
+
+JsonDict = Dict[str, Any]
+'''JSON files are dictionaries with string keys
+and arbitrary values.'''
 
 # https://docs.oracle.com/javase/8/docs/api/java/lang/package-summary.html
 DEFAULT_DECLARATIONS = ["String", "Integer", "Boolean", "Double", "Float", "Number", "Character", "Byte", "Short"]
@@ -11,24 +16,48 @@ FILE_NAME = r"(\w+)\.java"
 FOLDER_IMPORTS = r"(?:import\s+)(.*\.\w+)\.\*;"
 FILE_IMPORTS = r"(?:import\s+)(.*\.\w+);"
 
-class Definiton():
-    def __init__(self, name, is_static, is_interface):
-        self.name = name # Fully qualified
-        self.is_static = is_static
-        self.is_interface = is_interface
-        self.inheritance : Definiton = None # Cem
-        self.realization : List[Definiton] = [] # Cem
-        self.aggregation : List[Tuple[Definiton, str]] = [] # Oliver
-        self.composition : List[Definiton] = [] # Franciszek
-        self.dependencies : List[Definiton] = [] # Franciszek
+class AccessModifier(Enum):
+    Private = 0
+    Protected = 1
+    Package_Private = 2
+    Public = 3
+
+class Definition():
+    def __init__(self, name: str, is_static: bool, is_interface: bool, backing_dict=None):
+        self.name: str = name # Fully qualified
+        self.is_static: bool = is_static
+        self.is_interface: bool = is_interface
+        # self.is_abstract: bool = is_interface or is_abstract
+        # self.access_modifier: AccessModifier
+        self.inheritance : Optional[Definition] = None # Cem
+        self.realization : List[Definition] = [] # Cem
+        self.aggregation : List[Tuple[Definition, str]] = [] # Oliver
+        self.composition : List[Definition] = [] # Franciszek
+        self.dependencies : List[Definition] = [] # Franciszek
         self.methods : List[Method] = [] # Maks
         self.file_name : str = "" # Used for classes nested inside other files
+        
+        self.backing_dict : JsonDict = backing_dict
+
+    def __str__(self) -> str:
+        return \
+        f"Java Definition: {self.name}\n"\
+        f"    static: {self.is_static}\n"\
+        f"    interface: {self.is_interface}\n"
+    
+    def __repr__(self) -> str:
+        # lazy
+        return str(self)
+
+def create_definition() -> Definition:
+    pass
+
 
 class Method():
     def __init__(self, name):
         self.name : str = name
-        self.arguments : List[Tuple[Definiton, str]] = []
-        self.return_type : Definiton = None
+        self.arguments : List[Tuple[Definition, str]] = []
+        self.return_type : Optional[Definition] = None
 
 
 def find_files() -> Dict[str, str]:
@@ -52,7 +81,7 @@ def get_package_name(file_name: str) -> str:
     return ".".join(file_name.split(".")[0:-1])
 
 
-def create_graphviz_text(definitions: List[Definiton]):
+def create_graphviz_text(definitions: List[Definition]):
     result = "digraph UML_Class_diagram  {"
     for definition in definitions:
         if definition.inheritance is not None:
@@ -153,7 +182,7 @@ def parse_field(field_node: Node):
     return (field_type, field_name)
 
 
-def parse_class_body(result: Definiton, class_body_node: Node):
+def parse_class_body(result: Definition, class_body_node: Node):
     inner_classes = []
     for child in class_body_node.named_children:
         if child.type == "field_declaration":
@@ -170,7 +199,7 @@ def parse_class_body(result: Definiton, class_body_node: Node):
 def walk_class_tree(class_node: Node):
     class_name = next(x for x in class_node.children if x.type == "identifier").text.decode("utf8")
     is_static = "static" in next(x for x in class_node.children if x.type == "modifiers").text.decode("utf8")
-    outer_class = Definiton(class_name, is_static, False)
+    outer_class = Definition(class_name, is_static, False)
     result = [outer_class]
     for child in class_node.children:
         if child.type == "super_interfaces":
@@ -186,7 +215,7 @@ def walk_class_tree(class_node: Node):
 def walk_interface_tree(interface_node: Node):
     class_name = next(x for x in interface_node.children if x.type == "identifier").text.decode("utf8")
     is_static = "static" in next(x for x in interface_node.children if x.type == "modifiers").text.decode("utf8")
-    interface = Definiton(class_name, is_static, True)
+    interface = Definition(class_name, is_static, True)
     return [interface]
 
 
@@ -218,7 +247,7 @@ def main():
         imported_files[k] = folder_imports.union(package_imports).union(default_imports)
 
     parser = get_parser()
-    definitions: List[Definiton] = [] 
+    definitions: List[Definition] = [] 
     for file_name, content in file_content.items():
         found_definitions = walk_file_tree(parser, content)
         class_declarations[file_name] = set(x.name for x in found_definitions)

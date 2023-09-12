@@ -40,10 +40,11 @@ class Definition():
         self.backing_dict : JsonDict = backing_dict
 
     def __str__(self) -> str:
-        return \
-        f"Java Definition: {self.name}\n"\
-        f"    static: {self.is_static}\n"\
-        f"    interface: {self.is_interface}\n"
+        return self.name
+        #return \
+        #f"Java Definition: {self.name}\n"\
+        #f"    static: {self.is_static}\n"\
+        #f"    interface: {self.is_interface}\n"
     
     def __repr__(self) -> str:
         # lazy

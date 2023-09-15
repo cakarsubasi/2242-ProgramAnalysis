@@ -1,14 +1,53 @@
-import oliver_week_02 as dot
 from glob import glob
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 import os
 import json
 from pathlib import Path
+from enum import Enum
 
 JsonDict = Dict[str, Any]
 '''JSON files are dictionaries with string keys
 and arbitrary values.'''
 
+class AccessModifier(Enum):
+    Private = 0
+    Protected = 1
+    Package_Private = 2
+    Public = 3
+
+class Definition():
+    def __init__(self, name: str, is_static: bool, is_interface: bool, backing_dict=None):
+        self.name: str = name # Fully qualified
+        self.is_static: bool = is_static
+        self.is_interface: bool = is_interface
+        # self.is_abstract: bool = is_interface or is_abstract
+        # self.access_modifier: AccessModifier
+        self.inheritance : Optional[Definition] = None # Cem
+        self.realization : List[Definition] = [] # Cem
+        self.aggregation : List[Tuple[Definition, str]] = [] # Oliver
+        self.composition : List[Definition] = [] # Franciszek
+        self.dependencies : List[Definition] = [] # Franciszek
+        self.methods : List[Method] = [] # Maks
+        self.file_name : str = "" # Used for classes nested inside other files
+        
+        self.backing_dict : JsonDict = backing_dict
+
+    def __str__(self) -> str:
+        return self.name
+        #return \
+        #f"Java Definition: {self.name}\n"\
+        #f"    static: {self.is_static}\n"\
+        #f"    interface: {self.is_interface}\n"
+    
+    def __repr__(self) -> str:
+        # lazy
+        return str(self)
+
+class Method():
+    def __init__(self, name):
+        self.name : str = name
+        self.arguments : List[Tuple[Definition, str]] = []
+        self.return_type : Optional[Definition] = None
 
 def find_files_by_type(root_dir: Path, file_type: str) -> List[str]:
     '''Get the str path of all files in a given root directory of a given file type'''
@@ -62,18 +101,18 @@ def get_is_abstract(json_object: JsonDict) -> bool:
     return "abstract" in json_object['access']
 
 
-def create_definition(json_object: JsonDict) -> dot.Definition:
+def create_definition(json_object: JsonDict) -> Definition:
     '''Create a definition from the given JsonDict
     Not all fields are set within the class'''
     name = get_name(json_object)
     is_static = get_is_static(json_object)
     is_interface = get_is_interface(json_object)
-    definition = dot.Definition(name, is_static, is_interface)
+    definition = Definition(name, is_static, is_interface)
     definition.backing_dict = json_object
     return definition
 
 
-def set_superclass(definitions_dict: Dict[str, dot.Definition]):
+def set_superclass(definitions_dict: Dict[str, Definition]):
     '''
     Set superclass relations, ignores java.lang.Object as it is
     not useful information.
@@ -84,7 +123,7 @@ def set_superclass(definitions_dict: Dict[str, dot.Definition]):
             definition.inheritance = definitions_dict[super_class_maybe]
 
 
-def set_realization(definitions_dict: Dict[str, dot.Definition]):
+def set_realization(definitions_dict: Dict[str, Definition]):
     '''
     Set interface relations.
     '''
@@ -93,12 +132,52 @@ def set_realization(definitions_dict: Dict[str, dot.Definition]):
         definition.realization = [definitions_dict[interface]
                                   for interface in interface_names]
 
+def create_graphviz_text(definitions: List[Definition]):
+    result = "digraph UML_Class_diagram  {"
+    for definition in definitions:
+        if definition.inheritance is not None:
+            result += "edge [dir=back arrowtail=empty style=\"\"]\n"
+            result += f'"{definition.inheritance}" -> "{definition.name}" [label=inheritance]\n'
+        
+        if len(definition.realization) > 0:
+            result += "edge [dir=back arrowtail=empty style=dashed]\n"
+            for interface in definition.realization:
+                result += f'"{interface}" -> "{definition.name}" [label=realization]'
+        
+        if len(definition.composition) > 0:
+            result += "edge [dir=back arrowtail=diamond]\n"
+            for inner_class in definition.composition:
+                result += f'"{definition.name}":"{inner_class.name}" -> "{inner_class.name}" [label=composition]'
 
-def save_dot_text(definitions: List[dot.Definition], output_file: Path):
+        result += f"""
+        "{definition.name}" [
+            shape=plain
+            label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+                <tr> <td> <b>"{definition.name}"</b> </td> </tr>
+        """
+        if len(definition.aggregation) > 0 or len(definition.composition) > 0:
+            result += """
+                    <tr> <td>
+                    <table align="left" border="0" cellborder="0" cellspacing="0" >"""
+            for field in definition.aggregation:
+                result += f"""<tr> <td align="left">+ {field[1]} : {field[0]} </td> </tr>\n"""
+            for inner_class in definition.composition:
+                result += f"""<tr> <td port="{inner_class.name}" align="left" >- "{inner_class.name}"</td> </tr>\n"""
+            result += """
+                </table>
+                </td> </tr>"""
+        result += """
+            </table>>
+        ]
+        """
+    result += "\n}"
+    return result
+
+def save_dot_text(definitions: List[Definition], output_file: Path):
     '''
     Save given list of definitions to a dot file
     '''
-    text = dot.create_graphviz_text(definitions)
+    text = create_graphviz_text(definitions)
     with open(output_file, "w+") as fp:
         print(text, file=fp)
 

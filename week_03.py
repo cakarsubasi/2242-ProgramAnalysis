@@ -15,6 +15,13 @@ class AccessModifier(Enum):
     Package_Private = 2
     Public = 3
 
+uml_access = {
+    AccessModifier.Private: "-",
+    AccessModifier.Package_Private: "~",
+    AccessModifier.Protected: "#",
+    AccessModifier.Public: "+", 
+}
+
 class Definition():
     def __init__(self, name: str, is_static: bool, is_interface: bool, backing_dict=None):
         self.name: str = name # Fully qualified
@@ -24,7 +31,7 @@ class Definition():
         # self.access_modifier: AccessModifier
         self.inheritance : Optional[Definition] = None # Cem
         self.realization : List[Definition] = [] # Cem
-        self.aggregation : List[Tuple[Definition, str]] = [] # Oliver
+        self.aggregation : List[Field] = [] # Oliver
         self.composition : List[Definition] = [] # Franciszek
         self.dependencies : List[Definition] = [] # Franciszek
         self.methods : List[Method] = [] # Maks
@@ -42,6 +49,13 @@ class Definition():
     def __repr__(self) -> str:
         # lazy
         return str(self)
+
+class Field():
+    def __init__(self, name: str, type_name: str, access_modifier: AccessModifier, is_static: bool):
+        self.name : str = name
+        self.type_name : str = type_name
+        self.access_modifier : AccessModifier = access_modifier
+        self.is_staic : bool = is_static
 
 class Method():
     def __init__(self, name):
@@ -85,6 +99,38 @@ def get_interface_names(json_object: JsonDict) -> List[str]:
     '''get fully qualified names of the interfaces'''
     return [get_name(inner_dict) for inner_dict in json_object['interfaces']]
 
+def get_field_type_name(json_object: JsonDict) -> str:
+    '''get fully qualified names of the field types'''
+    if "name" in json_object:
+        nested = [get_field_type_name(inner["type"]) for inner in json_object["args"]]
+        base_name = get_name(json_object)
+        if len(nested) == 0:
+            return base_name
+        else:
+            return f"{base_name}[{','.join(nested)}]"
+    return json_object["base"]
+
+def get_field_access(json_object: JsonDict) -> Tuple[bool, AccessModifier]:
+    '''get access modifiers for field'''
+    access_modifiers = json_object["access"]
+    is_static = True if "static" in access_modifiers else False
+    if "public" in access_modifiers:
+        return (is_static, AccessModifier.Public)
+    if "protected" in access_modifiers:
+        return (is_static, AccessModifier.Protected)
+    if "private" in access_modifiers:
+        return (is_static, AccessModifier.Private)
+    return (is_static, AccessModifier.Package_Private)
+
+def get_fields(json_object: JsonDict) -> List[Tuple[str, str]]:
+    '''get definition and fully qualified names of the fields'''
+    fields = []
+    for field in json_object["fields"]:
+        field_name = field["name"]
+        type_name = get_field_type_name(field["type"])
+        is_static, acceess = get_field_access(field)
+        fields.append(Field(field_name, type_name, acceess, is_static))
+    return fields
 
 def get_is_static(json_object: JsonDict) -> bool:
     '''return true if class is static'''
@@ -131,6 +177,11 @@ def set_realization(definitions_dict: Dict[str, Definition]):
         interface_names = get_interface_names(definition.backing_dict)
         definition.realization = [definitions_dict[interface]
                                   for interface in interface_names]
+
+def set_aggregation(definitions_dict: Dict[str, Definition]):
+    for definition in definitions_dict.values():
+        fields = get_fields(definition.backing_dict)
+        definition.aggregation = fields
 
 def create_graphviz_text(definitions: List[Definition]):
     result = "digraph UML_Class_diagram  {"
@@ -202,6 +253,7 @@ def main():
 
     set_superclass(definitions_dictionary)
     set_realization(definitions_dictionary)
+    set_aggregation(definitions_dictionary)
 
     save_dot_text(definitions=definitions, output_file=output_file)
 

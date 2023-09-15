@@ -1,5 +1,5 @@
 {
-    "name": "dtu/deps/extra/Pregnant",
+    "name": "dtu/deps/extra/Pregnant$Soul",
     "access": [
         "public",
         "super"
@@ -14,12 +14,12 @@
     "interfaces": [],
     "fields": [
         {
-            "name": "month",
+            "name": "real",
             "access": [
                 "public"
             ],
             "type": {
-                "base": "short",
+                "base": "boolean",
                 "annotations": []
             },
             "value": null,
@@ -87,14 +87,6 @@
             "access": [
                 "public",
                 "static"
-            ]
-        },
-        {
-            "class": "dtu/deps/extra/Pregnant$Inside",
-            "outer": "dtu/deps/extra/Pregnant",
-            "name": "Inside",
-            "access": [
-                "public"
             ]
         }
     ],

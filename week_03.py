@@ -204,7 +204,7 @@ def create_graphviz_text(definitions: List[Definition]):
         "{definition.name}" [
             shape=plain
             label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="4">
-                <tr> <td> <b>"{definition.name}"</b> </td> </tr>
+                <tr> <td align="center"> <b>{definition.name}    </b> </td> </tr>
         """
         if len(definition.aggregation) > 0 or len(definition.composition) > 0:
             result += """

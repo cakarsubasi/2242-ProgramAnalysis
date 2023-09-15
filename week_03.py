@@ -210,8 +210,13 @@ def create_graphviz_text(definitions: List[Definition]):
             result += """
                     <tr> <td>
                     <table align="left" border="0" cellborder="0" cellspacing="0" >"""
-            for field in definition.aggregation:
-                result += f"""<tr> <td align="left">+ {field[1]} : {field[0]} </td> </tr>\n"""
+            sorted_fields =  sorted(definition.aggregation, key=lambda x: x.access_modifier.value, reverse=True)
+            for field in sorted_fields:
+                access = uml_access[field.access_modifier]
+                if field.is_staic:
+                    result += f"""<tr> <td align="left"><u> {access} {field.name} : {field.type_name} </u></td> </tr>\n"""
+                else:
+                    result += f"""<tr> <td align="left">{access} {field.name} : {field.type_name} </td> </tr>\n"""
             for inner_class in definition.composition:
                 result += f"""<tr> <td port="{inner_class.name}" align="left" >- "{inner_class.name}"</td> </tr>\n"""
             result += """

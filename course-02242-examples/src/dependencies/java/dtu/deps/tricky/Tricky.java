@@ -13,9 +13,9 @@ public class Tricky {
 
     Tricky dtu, deps, simple;
 
-    private<Other>void hello(/*dtu.deps.simple.Other*/ Utils Other) {private
+    private<Other>void hello(/*dtu.deps.simple.Other*/ Utils Other) {
         Tricky dtu = new Tricky();
-        dtu.deps.simple.Other = new Example();
+        dtu.deps.simple.Other example = new dtu.deps.simple.Other();
     }
     <Other>void Other(Other Other) {
         return;

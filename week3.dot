@@ -1,0 +1,116 @@
+digraph UML_Class_diagram  {edge [dir=back arrowtail=empty style=""]
+"dtu.deps.extra.Base" -> "dtu.deps.extra.First" [label=inheritance]
+
+        "dtu.deps.extra.First" [
+            shape=plain
+            label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+                <tr> <td align="center"> <b>dtu.deps.extra.First    </b> </td> </tr>
+        
+            </table>>
+        ]
+        
+        "dtu.deps.extra.Interhead" [
+            shape=plain
+            label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+                <tr> <td align="center"> <b>dtu.deps.extra.Interhead    </b> </td> </tr>
+        
+            </table>>
+        ]
+        edge [dir=back arrowtail=diamond]
+"dtu.deps.extra.Composed":"dtu.deps.extra.Pregnant" -> "dtu.deps.extra.Pregnant" [label=composition]"dtu.deps.extra.Composed":"dtu.deps.extra.First" -> "dtu.deps.extra.First" [label=composition]
+        "dtu.deps.extra.Composed" [
+            shape=plain
+            label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+                <tr> <td align="center"> <b>dtu.deps.extra.Composed    </b> </td> </tr>
+        
+                    <tr> <td>
+                    <table align="left" border="0" cellborder="0" cellspacing="0" ><tr> <td align="left">+ first : dtu.deps.extra.First </td> </tr>
+<tr> <td align="left">- person : dtu.deps.extra.Pregnant </td> </tr>
+<tr> <td port="dtu.deps.extra.Pregnant" align="left" >- "dtu.deps.extra.Pregnant"</td> </tr>
+<tr> <td port="dtu.deps.extra.First" align="left" >- "dtu.deps.extra.First"</td> </tr>
+
+                </table>
+                </td> </tr>
+            </table>>
+        ]
+        edge [dir=back arrowtail=empty style=dashed]
+"dtu.deps.extra.Interhead" -> "dtu.deps.extra.Second" [label=realization]
+        "dtu.deps.extra.Second" [
+            shape=plain
+            label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+                <tr> <td align="center"> <b>dtu.deps.extra.Second    </b> </td> </tr>
+        
+            </table>>
+        ]
+        
+        "dtu.deps.extra.Pregnant$Soul" [
+            shape=plain
+            label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+                <tr> <td align="center"> <b>dtu.deps.extra.Pregnant$Soul    </b> </td> </tr>
+        
+                    <tr> <td>
+                    <table align="left" border="0" cellborder="0" cellspacing="0" ><tr> <td align="left">+ real : boolean </td> </tr>
+
+                </table>
+                </td> </tr>
+            </table>>
+        ]
+        
+        "dtu.deps.extra.Pregnant$Inside" [
+            shape=plain
+            label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+                <tr> <td align="center"> <b>dtu.deps.extra.Pregnant$Inside    </b> </td> </tr>
+        
+                    <tr> <td>
+                    <table align="left" border="0" cellborder="0" cellspacing="0" ><tr> <td align="left">+ weight : int </td> </tr>
+<tr> <td align="left">~ this$0 : dtu.deps.extra.Pregnant </td> </tr>
+
+                </table>
+                </td> </tr>
+            </table>>
+        ]
+        
+        "dtu.deps.extra.Base" [
+            shape=plain
+            label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+                <tr> <td align="center"> <b>dtu.deps.extra.Base    </b> </td> </tr>
+        
+                    <tr> <td>
+                    <table align="left" border="0" cellborder="0" cellspacing="0" ><tr> <td align="left">+ publicName : java.lang.String </td> </tr>
+<tr> <td align="left">+ listField : java.lang.Iterable[java.lang.String] </td> </tr>
+<tr> <td align="left">~ packagePrivateName : java.lang.String </td> </tr>
+<tr> <td align="left"><u> ~ staticName : java.lang.String </u></td> </tr>
+<tr> <td align="left"># protectedName : java.lang.String </td> </tr>
+<tr> <td align="left">- privateName : java.lang.String </td> </tr>
+<tr> <td align="left"><u> - privateStaticName : java.lang.String </u></td> </tr>
+
+                </table>
+                </td> </tr>
+            </table>>
+        ]
+        edge [dir=back arrowtail=empty style=""]
+"dtu.deps.extra.Base" -> "dtu.deps.extra.Hoarder" [label=inheritance]
+edge [dir=back arrowtail=empty style=dashed]
+"dtu.deps.extra.Interhead" -> "dtu.deps.extra.Hoarder" [label=realization]
+        "dtu.deps.extra.Hoarder" [
+            shape=plain
+            label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+                <tr> <td align="center"> <b>dtu.deps.extra.Hoarder    </b> </td> </tr>
+        
+            </table>>
+        ]
+        
+        "dtu.deps.extra.Pregnant" [
+            shape=plain
+            label=<<table border="0" cellborder="1" cellspacing="0" cellpadding="4">
+                <tr> <td align="center"> <b>dtu.deps.extra.Pregnant    </b> </td> </tr>
+        
+                    <tr> <td>
+                    <table align="left" border="0" cellborder="0" cellspacing="0" ><tr> <td align="left">+ month : short </td> </tr>
+
+                </table>
+                </td> </tr>
+            </table>>
+        ]
+        
+}

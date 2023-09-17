@@ -58,10 +58,11 @@ class Field():
         self.is_staic : bool = is_static
 
 class Method():
-    def __init__(self, name):
+    def __init__(self, name, access_modifier: AccessModifier, return_type : str):
         self.name : str = name
-        self.arguments : List[Tuple[Definition, str]] = []
-        self.return_type : Optional[Definition] = None
+        self.access_modifier : AccessModifier = access_modifier
+        self.arguments : List[str] = []
+        self.return_type : str = return_type
 
 def find_files_by_type(root_dir: Path, file_type: str) -> List[str]:
     '''Get the str path of all files in a given root directory of a given file type'''
@@ -132,6 +133,73 @@ def get_fields(json_object: JsonDict) -> List[Tuple[str, str]]:
         fields.append(Field(field_name, type_name, acceess, is_static))
     return fields
 
+def get_return_type(json_object: JsonDict) -> str :
+    return_type : JsonDict = json_object["returns"]["type"]
+
+    if return_type == None:
+        return ": void"
+
+    if "kind" in return_type:
+        class_name = json_object["name"].split('/')
+        return ": " + class_name[len(class_name) - 1]
+    
+    elif "base" in return_type:
+        return ": " + return_type["base"]
+
+def get_argument_list(json_objcet: JsonDict) -> List[str]:
+    argument_list = []
+    
+    for param in json_objcet["params"]:
+        
+        if param["type"]["kind"] == "array":
+
+            if param["type"]["type"]["kind"] == "class":
+                class_name = param["type"]["type"]["name"].split('/')
+                argument_list.append("[] " + class_name[len(class_name)-1])
+            
+            elif param["type"]["type"]["kind"] == "typevar":
+                argument_list.append("[] Object")
+
+        elif param["type"]["kind"] == "typevar":
+            argument_list.append("Object")
+        
+        elif param["type"]["kind"] == "class":
+            class_name = param["type"]["name"].split('/')
+            argument_list.append(class_name[len(class_name)-1])
+    
+    # for typeparam in json_objcet["typeparams"]:
+    #     print("Typeparam: ", typeparam)
+
+    print(argument_list)
+    return argument_list
+
+def get_methods(json_object: JsonDict) -> List[Method] :
+    print(json_object["name"])
+    methods = []
+    for method_object in json_object["methods"] :
+        method_name = method_object["name"]
+        
+        # Constructor case
+        if (method_name == "<init>") :
+            class_name = json_object["name"].split('/')
+            method_name = class_name[len(class_name) - 1]
+            access = get_field_access(method_object)
+            return_type = ""
+            argument_list = get_argument_list(method_object)
+
+            method = Method(method_name, access[1], return_type)
+            method.arguments = argument_list
+            methods.append(method)
+        else :
+            access = get_field_access(method_object)
+            argument_list = get_argument_list(method_object)
+            return_type = get_return_type(method_object)
+            method = Method(method_name, access[1], return_type)
+            method.arguments = argument_list
+            methods.append(method)
+
+    return methods
+
 def get_is_static(json_object: JsonDict) -> bool:
     '''return true if class is static'''
     return "static" in json_object['access']
@@ -182,6 +250,11 @@ def set_aggregation(definitions_dict: Dict[str, Definition]):
     for definition in definitions_dict.values():
         fields = get_fields(definition.backing_dict)
         definition.aggregation = fields
+
+def set_methods(definitions_dict: Dict[str, Definition]):
+    for definition in definitions_dict.values():
+        methods = get_methods(definition.backing_dict)
+        definition.methods = methods
 
 def create_graphviz_text(definitions: List[Definition]):
     result = "digraph UML_Class_diagram  {"
@@ -251,14 +324,15 @@ def main():
 
     definitions = [create_definition(json_object)
                    for json_object in json_objects]
-    print(definitions)
+    # print(definitions)
 
     definitions_dictionary = {
         definition.name: definition for definition in definitions}
 
     set_superclass(definitions_dictionary)
-    set_realization(definitions_dictionary)
-    set_aggregation(definitions_dictionary)
+    set_methods(definitions_dictionary)
+    # set_realization(definitions_dictionary)
+    # set_aggregation(definitions_dictionary)
 
     save_dot_text(definitions=definitions, output_file=output_file)
 

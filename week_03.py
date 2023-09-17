@@ -215,6 +215,19 @@ def get_is_abstract(json_object: JsonDict) -> bool:
     return "abstract" in json_object['access']
 
 
+def get_new_keyword_invocations(json_object: JsonDict) -> List[str]:
+    methods = json_object["methods"]
+
+    newInstances = []
+
+    for method in methods:
+        for leaf in method["code"]["bytecode"]:
+            if "opr" in leaf and leaf["opr"] == "new":
+                newInstances.append(leaf["class"].replace('/', '.'))
+
+    return newInstances
+
+
 def create_definition(json_object: JsonDict) -> Definition:
     '''Create a definition from the given JsonDict
     Not all fields are set within the class'''
@@ -255,6 +268,11 @@ def set_methods(definitions_dict: Dict[str, Definition]):
     for definition in definitions_dict.values():
         methods = get_methods(definition.backing_dict)
         definition.methods = methods
+def set_compositions(definitions_dict: Dict[str, Definition]):
+        for definition in definitions_dict.values():
+            nonstatic_members = get_new_keyword_invocations(definition.backing_dict)
+            definition.composition = [definitions_dict[nonstatic]
+                                  for nonstatic in nonstatic_members]
 
 def create_graphviz_text(definitions: List[Definition]):
     result = "digraph UML_Class_diagram  {"
@@ -324,15 +342,17 @@ def main():
 
     definitions = [create_definition(json_object)
                    for json_object in json_objects]
-    # print(definitions)
+                   
+    #print(definitions)
 
     definitions_dictionary = {
         definition.name: definition for definition in definitions}
 
     set_superclass(definitions_dictionary)
     set_methods(definitions_dictionary)
-    # set_realization(definitions_dictionary)
-    # set_aggregation(definitions_dictionary)
+    set_realization(definitions_dictionary)
+    set_aggregation(definitions_dictionary)
+    set_compositions(definitions_dictionary)
 
     save_dot_text(definitions=definitions, output_file=output_file)
 

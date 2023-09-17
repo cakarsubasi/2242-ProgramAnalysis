@@ -1,0 +1,394 @@
+{
+    "name": "dtu/deps/extra/Composed",
+    "access": [
+        "public",
+        "super"
+    ],
+    "typeparams": [],
+    "super": {
+        "name": "java/lang/Object",
+        "inner": null,
+        "args": [],
+        "annotations": []
+    },
+    "interfaces": [],
+    "fields": [
+        {
+            "name": "person",
+            "access": [
+                "private"
+            ],
+            "type": {
+                "kind": "class",
+                "name": "dtu/deps/extra/Pregnant",
+                "inner": null,
+                "args": [],
+                "annotations": []
+            },
+            "value": null,
+            "annotations": []
+        },
+        {
+            "name": "first",
+            "access": [
+                "public"
+            ],
+            "type": {
+                "kind": "class",
+                "name": "dtu/deps/extra/First",
+                "inner": null,
+                "args": [],
+                "annotations": []
+            },
+            "value": null,
+            "annotations": []
+        }
+    ],
+    "methods": [
+        {
+            "name": "<init>",
+            "access": [
+                "public"
+            ],
+            "typeparams": [],
+            "params": [
+                {
+                    "visible": true,
+                    "type": {
+                        "base": "short",
+                        "annotations": []
+                    },
+                    "annotations": []
+                }
+            ],
+            "returns": {
+                "type": null,
+                "annotations": []
+            },
+            "code": {
+                "max_stack": 3,
+                "max_locals": 3,
+                "exceptions": [],
+                "stack_map": null,
+                "bytecode": [
+                    {
+                        "offset": 0,
+                        "opr": "load",
+                        "type": "ref",
+                        "index": 0
+                    },
+                    {
+                        "offset": 1,
+                        "opr": "invoke",
+                        "access": "special",
+                        "method": {
+                            "is_interface": false,
+                            "ref": {
+                                "kind": "class",
+                                "name": "java/lang/Object"
+                            },
+                            "name": "<init>",
+                            "args": [],
+                            "returns": null
+                        }
+                    },
+                    {
+                        "offset": 4,
+                        "opr": "load",
+                        "type": "ref",
+                        "index": 0
+                    },
+                    {
+                        "offset": 5,
+                        "opr": "new",
+                        "class": "dtu/deps/extra/Pregnant"
+                    },
+                    {
+                        "offset": 8,
+                        "opr": "dup",
+                        "words": 1
+                    },
+                    {
+                        "offset": 9,
+                        "opr": "invoke",
+                        "access": "special",
+                        "method": {
+                            "is_interface": false,
+                            "ref": {
+                                "kind": "class",
+                                "name": "dtu/deps/extra/Pregnant"
+                            },
+                            "name": "<init>",
+                            "args": [],
+                            "returns": null
+                        }
+                    },
+                    {
+                        "offset": 12,
+                        "opr": "put",
+                        "static": false,
+                        "field": {
+                            "class": "dtu/deps/extra/Composed",
+                            "name": "person",
+                            "type": {
+                                "kind": "class",
+                                "name": "dtu/deps/extra/Pregnant"
+                            }
+                        }
+                    },
+                    {
+                        "offset": 15,
+                        "opr": "new",
+                        "class": "dtu/deps/extra/First"
+                    },
+                    {
+                        "offset": 18,
+                        "opr": "dup",
+                        "words": 1
+                    },
+                    {
+                        "offset": 19,
+                        "opr": "invoke",
+                        "access": "special",
+                        "method": {
+                            "is_interface": false,
+                            "ref": {
+                                "kind": "class",
+                                "name": "dtu/deps/extra/First"
+                            },
+                            "name": "<init>",
+                            "args": [],
+                            "returns": null
+                        }
+                    },
+                    {
+                        "offset": 22,
+                        "opr": "store",
+                        "type": "ref",
+                        "index": 2
+                    },
+                    {
+                        "offset": 23,
+                        "opr": "load",
+                        "type": "ref",
+                        "index": 0
+                    },
+                    {
+                        "offset": 24,
+                        "opr": "load",
+                        "type": "ref",
+                        "index": 2
+                    },
+                    {
+                        "offset": 25,
+                        "opr": "put",
+                        "static": false,
+                        "field": {
+                            "class": "dtu/deps/extra/Composed",
+                            "name": "first",
+                            "type": {
+                                "kind": "class",
+                                "name": "dtu/deps/extra/First"
+                            }
+                        }
+                    },
+                    {
+                        "offset": 28,
+                        "opr": "load",
+                        "type": "ref",
+                        "index": 0
+                    },
+                    {
+                        "offset": 29,
+                        "opr": "get",
+                        "static": false,
+                        "field": {
+                            "class": "dtu/deps/extra/Composed",
+                            "name": "person",
+                            "type": {
+                                "kind": "class",
+                                "name": "dtu/deps/extra/Pregnant"
+                            }
+                        }
+                    },
+                    {
+                        "offset": 32,
+                        "opr": "load",
+                        "type": "int",
+                        "index": 1
+                    },
+                    {
+                        "offset": 33,
+                        "opr": "put",
+                        "static": false,
+                        "field": {
+                            "class": "dtu/deps/extra/Pregnant",
+                            "name": "month",
+                            "type": "short"
+                        }
+                    },
+                    {
+                        "offset": 36,
+                        "opr": "return",
+                        "type": null
+                    }
+                ]
+            },
+            "annotations": [],
+            "exceptions": [],
+            "default": null
+        },
+        {
+            "name": "proxySetMethod",
+            "access": [
+                "public"
+            ],
+            "typeparams": [],
+            "params": [],
+            "returns": {
+                "type": null,
+                "annotations": []
+            },
+            "code": {
+                "max_stack": 3,
+                "max_locals": 2,
+                "exceptions": [],
+                "stack_map": null,
+                "bytecode": [
+                    {
+                        "offset": 0,
+                        "opr": "push",
+                        "value": {
+                            "type": "integer",
+                            "value": 12
+                        }
+                    },
+                    {
+                        "offset": 2,
+                        "opr": "store",
+                        "type": "int",
+                        "index": 1
+                    },
+                    {
+                        "offset": 3,
+                        "opr": "load",
+                        "type": "ref",
+                        "index": 0
+                    },
+                    {
+                        "offset": 4,
+                        "opr": "get",
+                        "static": false,
+                        "field": {
+                            "class": "dtu/deps/extra/Composed",
+                            "name": "person",
+                            "type": {
+                                "kind": "class",
+                                "name": "dtu/deps/extra/Pregnant"
+                            }
+                        }
+                    },
+                    {
+                        "offset": 7,
+                        "opr": "load",
+                        "type": "ref",
+                        "index": 0
+                    },
+                    {
+                        "offset": 8,
+                        "opr": "load",
+                        "type": "int",
+                        "index": 1
+                    },
+                    {
+                        "offset": 9,
+                        "opr": "invoke",
+                        "access": "virtual",
+                        "method": {
+                            "ref": {
+                                "kind": "class",
+                                "name": "dtu/deps/extra/Composed"
+                            },
+                            "name": "replaceMonth",
+                            "args": [
+                                "short"
+                            ],
+                            "returns": "short"
+                        }
+                    },
+                    {
+                        "offset": 12,
+                        "opr": "put",
+                        "static": false,
+                        "field": {
+                            "class": "dtu/deps/extra/Pregnant",
+                            "name": "month",
+                            "type": "short"
+                        }
+                    },
+                    {
+                        "offset": 15,
+                        "opr": "return",
+                        "type": null
+                    }
+                ]
+            },
+            "annotations": [],
+            "exceptions": [],
+            "default": null
+        },
+        {
+            "name": "replaceMonth",
+            "access": [
+                "public"
+            ],
+            "typeparams": [],
+            "params": [
+                {
+                    "visible": true,
+                    "type": {
+                        "base": "short",
+                        "annotations": []
+                    },
+                    "annotations": []
+                }
+            ],
+            "returns": {
+                "type": {
+                    "base": "short"
+                },
+                "annotations": []
+            },
+            "code": {
+                "max_stack": 1,
+                "max_locals": 2,
+                "exceptions": [],
+                "stack_map": null,
+                "bytecode": [
+                    {
+                        "offset": 0,
+                        "opr": "load",
+                        "type": "int",
+                        "index": 1
+                    },
+                    {
+                        "offset": 1,
+                        "opr": "return",
+                        "type": "int"
+                    }
+                ]
+            },
+            "annotations": [],
+            "exceptions": [],
+            "default": null
+        }
+    ],
+    "bootstrapmethods": [],
+    "enclosingmethod": null,
+    "innerclasses": [],
+    "annotations": [],
+    "version": [
+        60,
+        0
+    ]
+}

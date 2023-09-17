@@ -151,26 +151,27 @@ def get_argument_list(json_objcet: JsonDict) -> List[str]:
     
     for param in json_objcet["params"]:
         
-        if param["type"]["kind"] == "array":
+        if "kind" in param["type"]:
 
-            if param["type"]["type"]["kind"] == "class":
-                class_name = param["type"]["type"]["name"].split('/')
-                argument_list.append("[] " + class_name[len(class_name)-1])
+            if param["type"]["kind"] == "array":
+
+                if param["type"]["type"]["kind"] == "class":
+                    class_name = param["type"]["type"]["name"].split('/')
+                    argument_list.append("[] " + class_name[len(class_name)-1])
+                
+                elif param["type"]["type"]["kind"] == "typevar":
+                    argument_list.append("[] Object")
+
+            elif param["type"]["kind"] == "typevar":
+                argument_list.append("Object")
             
-            elif param["type"]["type"]["kind"] == "typevar":
-                argument_list.append("[] Object")
-
-        elif param["type"]["kind"] == "typevar":
-            argument_list.append("Object")
+            elif param["type"]["kind"] == "class":
+                class_name = param["type"]["name"].split('/')
+                argument_list.append(class_name[len(class_name)-1])
         
-        elif param["type"]["kind"] == "class":
-            class_name = param["type"]["name"].split('/')
-            argument_list.append(class_name[len(class_name)-1])
-    
-    # for typeparam in json_objcet["typeparams"]:
-    #     print("Typeparam: ", typeparam)
+        elif "base" in param["type"]:
+            argument_list.append(param["type"]["base"])
 
-    print(argument_list)
     return argument_list
 
 def get_methods(json_object: JsonDict) -> List[Method] :
@@ -342,17 +343,15 @@ def main():
 
     definitions = [create_definition(json_object)
                    for json_object in json_objects]
-                   
-    #print(definitions)
 
     definitions_dictionary = {
         definition.name: definition for definition in definitions}
 
     set_superclass(definitions_dictionary)
     set_methods(definitions_dictionary)
-    set_realization(definitions_dictionary)
-    set_aggregation(definitions_dictionary)
-    set_compositions(definitions_dictionary)
+    # set_realization(definitions_dictionary)
+    # set_aggregation(definitions_dictionary)
+    # set_compositions(definitions_dictionary)
 
     save_dot_text(definitions=definitions, output_file=output_file)
 

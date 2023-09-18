@@ -24,7 +24,6 @@ if
     le
 """
 
-
 class Value:
 
     def __init__(self, type_name, value):
@@ -46,15 +45,36 @@ class StackElement:
 
 class Interpreter:
 
-    def __init__(self):
+    def __init__(self, json_program):
         self.memory: Dict[str, Value] = {}
-        self.stack = List[StackElement]
+        self.stack: List[StackElement] = json_program
+        self.json_program = json_program
 
     def run(self):
-        pass
+        if len(self.stack) == 0:
+            return
+        element = self.stack.pop(-1)
+        # operation = self.json_program.bytecode[element.method_name][element.counter]
+        operation = element
+        self.run_operation(operation)
+        self.run()
 
-    def step(self):
-        pass
+    def run_operation(self, operation):
+        method = method_mapper[operation]
+        method(self)
 
-    def pop(self):
-        pass
+
+def perform_noop(runner: Interpreter):
+    print("example")
+
+def perform_add(runner: Interpreter):
+    runner.stack.append("noop")
+    print("add")
+
+method_mapper = {
+    "noop": perform_noop,
+    "add": perform_add,
+}
+
+runner = Interpreter(["add", "add"])
+runner.run()

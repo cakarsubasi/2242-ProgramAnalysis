@@ -13,11 +13,11 @@ public class Tricky {
 
     Tricky dtu, deps, simple;
 
-    private <Other> void hello(/*dtu.deps.simple.Other*/ Utils Other) {
+    private<Other>void hello(/*dtu.deps.simple.Other*/ Utils Other) {
         Tricky dtu = new Tricky();
-        dtu.deps.simple.Other = new Example();
+        dtu.deps.simple.Other example = new dtu.deps.simple.Other();
     }
-    private <Other> void Other(Other Other) {
+    <Other>void Other(Other Other) {
         return;
     }
 }

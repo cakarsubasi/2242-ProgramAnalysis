@@ -1,4 +1,4 @@
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 from .parser import JavaClass, JavaProgram
 
@@ -38,33 +38,6 @@ class ShortValue:
     value: int
 
 @dataclass
-class RefValue:
-    type: str
-    # refvalue should contain a pointer
-    # to a mutable data structure
-    # the simplest one in Python is the list
-    value: List[Any]
-    # Also keep in mind that to emulate Java
-    # behavior, we need reference counting
-    # semantics but right now it is likely
-    # simpler to just leak all memory
-
-    # Copies made of this dataclass should
-    # copy the pointer allowing different
-    # instances to refer to the same data
-
-    def __init__(self, type: str, value: Any):
-        self.type = type
-        self.value = [value]
-
-    def __getattr__(self, name: str):
-        # unwrap the value to not pass a list
-        if name == "value":
-            return self.value[0]
-        else:
-            return getattr(self, name)
-
-@dataclass
 class BoolValue:
     value: bool
 
@@ -73,15 +46,38 @@ class ByteValue:
     # TODO: use a better byte
     value: int
 
+@dataclass
+class ArrayValue:
+    value: List[Any]
 
+@dataclass
+class RefValue:
+    # refvalue should contain a pointer
+    # to another structure
+    value: Any 
+    # Also keep in mind that to emulate Java
+    # behavior, we need reference counting
+    # semantics but right now it is likely
+    # simpler to just leak all memory
 
-JavaValue = IntValue | BoolValue | ByteValue | ShortValue | RefValue
+@dataclass
+class ClassValue:
+    class_name: str
+    fields: Dict[str, RefValue]
+    # strictly speaking, we do not have to store the method information
 
-class Value:
+# JavaValue can be these things, but feel free to add more
+JavaValue = IntValue | BoolValue | ByteValue | ShortValue | RefValue | None
 
-    def __init__(self, type_name: str, value: JavaValue):
-        self.type_name = type_name
-        self.value = value
+#class Value:
+#    def __init__(self, type_name: str, value: Any):
+#        self.type_name = type_name
+#        self.value = value
+
+class JavaError:
+    # Need a way of propagating errors
+    # Probably best to discuss how to implement this before deciding on one
+    pass
 
 class Counter:
 
@@ -92,14 +88,14 @@ class Counter:
 class StackElement:
 
     def __init__(self, counter: Counter):
-        self.local_variables: List[Value] = []
-        self.operational_stack: List[Value] = []
+        self.local_variables: List[JavaValue] = []
+        self.operational_stack: List[JavaValue] = []
         self.counter: Counter = counter
 
 class Interpreter:
 
     def __init__(self, json_program):
-        self.memory: Dict[str, Value] = {}
+        self.memory: Dict[str, JavaValue] = {}
         self.stack: List[StackElement] = json_program
         self.json_program = json_program
 
@@ -132,9 +128,16 @@ method_mapper = {
 #runner = Interpreter(["add", "add"])
 #runner.run()
 
-def run_program():
+def run_program(java_program: JavaProgram):
+    # Ignore this for now
     raise NotImplementedError
 
-def run_method(java_class: JavaClass, method_name: str, method_args: Dict[str, JavaValue]) -> JavaValue:
-    raise NotImplementedError
+def run_method(java_class: JavaClass, method_name: str, method_args: Dict[str, JavaValue], environment: Optional[JavaProgram]=None) -> JavaValue | JavaError:
+    # This is the entry point, this function should create an
+    # Interpreter instance, and then run it with the given
+    # properties. It should raise an error
+    # if it gets unexpected or inadequate arguments
+
+    # The environment should allow referencing other classes
+    return IntValue(0)
 

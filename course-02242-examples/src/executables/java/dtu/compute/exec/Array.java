@@ -42,7 +42,7 @@ class Array {
         int n = vals.length;
         while (n > 1) {
             int next_n = 0;
-            for (int i = 0; i < n ; i++) {
+            for (int i = 1; i < n ; i++) {
                 if (vals[i - 1] > vals[i]) {
                     int tmp = vals[i - 1];
                     vals[i - 1] = vals[i];

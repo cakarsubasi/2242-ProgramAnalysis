@@ -57,7 +57,7 @@ class TestArray:
     def test_first(self):
         array = [0, 1, 3]
         assert run_method(self.java_class, "first", [array], None) == 0
-        array_empty = RefValue(ArrayValue([])) # TODO: Java still types empty arrays, so should handle that
+        # array_empty = RefValue(ArrayValue([])) # TODO: Java still types empty arrays, so should handle that
         # assert run_method(self.java_class, "first", { "vals" : array }, None) == 0
         # No way to assert this right now without deciding on error handling
         # Best to use our own classes rather than relying on Python exceptions as Python 

@@ -51,6 +51,7 @@ class ByteValue:
 
 @dataclass
 class ArrayValue:
+    length: int
     value: List[Any]
 
 @dataclass
@@ -124,8 +125,8 @@ class Operation:
 
 class Interpreter:
 
-    def __init__(self, java_class: JavaClass, method_name, method_args: List[Value]):
-        self.memory: Dict[str, JavaValue] = {}
+    def __init__(self, java_class: JavaClass, method_name, method_args: List[Value], memory: Dict[str, JavaValue] = {}):
+        self.memory: Dict[str, JavaValue] = memory
         self.stack: List[StackElement] = [StackElement(method_args, [], Counter(method_name, 0))]
         self.java_class = java_class
 
@@ -231,9 +232,9 @@ def perform_goto(runner: Interpreter, opr: Operation, element: StackElement):
     runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
 
 def perform_array_load(runner: Interpreter, opr: Operation, element: StackElement):
-    arr = element.operational_stack[-2].value
+    arr_address = element.operational_stack[-2].value
     index = element.operational_stack[-1].value
-    value = Value(arr[index])
+    value = Value(runner.memory[arr_address].value[index])
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
 def perform_get(runner: Interpreter, opr: Operation, element: StackElement):
@@ -242,8 +243,9 @@ def perform_get(runner: Interpreter, opr: Operation, element: StackElement):
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [Value(0)], element.counter.next_counter()))
 
 def perform_array_length(runner: Interpreter, opr: Operation, element: StackElement):
-    arr = element.operational_stack[-1].value
-    value = Value(len(arr))
+    arr_address = element.operational_stack[-1].value
+    arr_length = runner.memory[arr_address].length
+    value = Value(arr_length)
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
 def perform_new(runner: Interpreter, opr: Operation, element: StackElement):
@@ -263,7 +265,7 @@ def perform_invoke(runner: Interpreter, opr: Operation, element: StackElement):
     for i in range(len(opr.method["args"])):
         args.append(element.operational_stack[(i + 1) * -1])
     args.reverse()
-    result = run_method(runner.get_class(class_name, method_name), method_name, args)
+    result = run_method(runner.get_class(class_name, method_name), method_name, args, runner.memory)
     if opr.method["returns"] is not None:
         runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
     else:
@@ -308,6 +310,16 @@ def run_method(java_class: JavaClass, method_name: str, method_args: List[JavaVa
 
     # The environment should allow referencing other classes
 
-    args = [Value(x) for x in method_args]
-    interpreter = Interpreter(java_class, method_name, args)
+    args = []
+    memory = {}
+    for arg in method_args:
+        type_name = type(arg).__name__
+        if type_name == "list":
+            memory_address = uuid.uuid4()
+            memory[memory_address] = ArrayValue(len(arg), arg)
+            args.append(Value(memory_address))
+        else:
+            args.append(Value(arg, type_name))
+
+    interpreter = Interpreter(java_class, method_name, args, memory)
     return interpreter.run()

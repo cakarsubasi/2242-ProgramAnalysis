@@ -230,9 +230,9 @@ def perform_array_load(runner: Interpreter, opr: Operation, element: StackElemen
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
 def perform_get(runner: Interpreter, opr: Operation, element: StackElement):
-    # I am not sure what get does but I am guessing it returns 0 when it fails and 1 when it succeeds.
+    # I am not sure what get does but I am guessing it returns 0 when it succeeds and some else otherwise.
     # So we are just always going to assume that it works.
-    runner.stack.append(StackElement(element.local_variables, element.operational_stack + [Value(1)], element.counter.next_counter()))
+    runner.stack.append(StackElement(element.local_variables, element.operational_stack + [Value(0)], element.counter.next_counter()))
 
 def perform_array_length(runner: Interpreter, opr: Operation, element: StackElement):
     arr = element.operational_stack[-1].value

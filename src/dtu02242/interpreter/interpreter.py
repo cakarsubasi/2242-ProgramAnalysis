@@ -127,7 +127,7 @@ class Interpreter:
         #self.method_name = method_name
 
     def run(self):
-        for _ in range(10):
+        while True:
             element = self.stack[-1]
             operation = Operation(self.java_class.get_method(element.counter.method_name)["code"]["bytecode"][element.counter.counter])
             if operation.get_name() == "return":
@@ -170,14 +170,17 @@ def perform_strictly_greater(runner: Interpreter, opr: Operation, element: Stack
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
 def perform_store(runner: Interpreter, opr: Operation, element: StackElement):
-    value = element.operational_stack[-1].value
+    value = element.operational_stack[-1]
     local_vars = [x for x in element.local_variables]
-    local_vars[opr.index] = value
+    if len(local_vars) <= opr.index:
+        local_vars.append(value)
+    else:
+        local_vars[opr.index] = value
     runner.stack.append(StackElement(local_vars, element.operational_stack, element.counter.next_counter()))
 
 def perform_less_than_or_equal_zero(runner: Interpreter, opr: Operation, element: StackElement):
-    first = 0
-    second = element.operational_stack[-1].value
+    first = element.operational_stack[-1].value
+    second = 0
     if first <= second:
         next_counter = Counter(element.counter.method_name, opr.target)
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
@@ -186,8 +189,8 @@ def perform_less_than_or_equal_zero(runner: Interpreter, opr: Operation, element
 
 def perform_increment(runner: Interpreter, opr: Operation, element: StackElement):
     local_vars = [x for x in element.local_variables]
-    value = element.local_variables[opr.index]
-    local_vars[opr.index] = value + opr.amount
+    value = element.local_variables[opr.index].value
+    local_vars[opr.index] = Value(value + opr.amount)
     runner.stack.append(StackElement(local_vars, element.operational_stack, element.counter.next_counter()))
 
 def perform_multiplication(runner: Interpreter, opr: Operation, element: StackElement):

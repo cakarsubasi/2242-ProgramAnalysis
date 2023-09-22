@@ -41,12 +41,12 @@ class TestSimple:
         assert run_method(self.java_class, "min", [1, 1], None) == 1
 
     def test_factorial(self):
-        assert run_method(self.java_class, "factorial", { "n" : IntValue(1) }, None) == IntValue(1)
-        assert run_method(self.java_class, "factorial", { "n" : IntValue(2) }, None) == IntValue(2)
-        assert run_method(self.java_class, "factorial", { "n" : IntValue(3) }, None) == IntValue(6)
-        assert run_method(self.java_class, "factorial", { "n" : IntValue(4) }, None) == IntValue(24)
-        assert run_method(self.java_class, "factorial", { "n" : IntValue(5) }, None) == IntValue(120)
-        assert run_method(self.java_class, "factorial", { "n" : IntValue(6) }, None) == IntValue(720)
+        assert run_method(self.java_class, "factorial", [1], None) == 1
+        assert run_method(self.java_class, "factorial", [2], None) == 2
+        assert run_method(self.java_class, "factorial", [3], None) == 6
+        assert run_method(self.java_class, "factorial", [4], None) == 24
+        assert run_method(self.java_class, "factorial", [5], None) == 120
+        assert run_method(self.java_class, "factorial", [6], None) == 720
 
 
 @pytest.mark.skip(reason="First get TestSimple working")

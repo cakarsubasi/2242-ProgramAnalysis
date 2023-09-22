@@ -109,6 +109,7 @@ class Operation:
         self.value: Value = Value(json_doc["value"]["value"], json_doc["value"]["type"]) if "value" in json_doc else None
         self.condition: str = json_doc["condition"] if "condition" in json_doc else None
         self.target: int = json_doc["target"] if "target" in json_doc else None
+        self.amount: int = json_doc["amount"] if "amount" in json_doc else None
 
     def get_name(self):
         if self.operant:
@@ -172,7 +173,7 @@ def perform_store(runner: Interpreter, opr: Operation, element: StackElement):
     value = element.operational_stack[-1].value
     local_vars = [x for x in element.local_variables]
     local_vars[opr.index] = value
-    runner.stack.append(StackElement(local_vars, element.operational_stack + [value], element.counter.next_counter()))
+    runner.stack.append(StackElement(local_vars, element.operational_stack, element.counter.next_counter()))
 
 def perform_less_than_or_equal_zero(runner: Interpreter, opr: Operation, element: StackElement):
     first = 0
@@ -183,6 +184,11 @@ def perform_less_than_or_equal_zero(runner: Interpreter, opr: Operation, element
     else:
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
+def perform_increment(runner: Interpreter, opr: Operation, element: StackElement):
+    local_vars = [x for x in element.local_variables]
+    value = element.local_variables[opr.index]
+    local_vars[opr.index] = value + opr.amount
+    runner.stack.append(StackElement(local_vars, element.operational_stack, element.counter.next_counter()))
 
 method_mapper = {
     "push": perform_push,
@@ -192,6 +198,7 @@ method_mapper = {
     "if-gt": perform_strictly_greater,
     "store": perform_store,
     "ifz-le": perform_less_than_or_equal_zero,
+    "incr": perform_increment
 }
 
 def run_program(java_program: JavaProgram):

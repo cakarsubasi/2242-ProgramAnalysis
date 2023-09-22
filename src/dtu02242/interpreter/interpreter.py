@@ -98,9 +98,9 @@ class StackElement:
 
 class Interpreter:
 
-    def __init__(self, java_class, method_name):
+    def __init__(self, java_class, method_name, method_args: List[JavaValue]):
         self.memory: Dict[str, JavaValue] = {}
-        self.stack: List[StackElement] = [StackElement([], [], Counter(method_name, 0))]
+        self.stack: List[StackElement] = [StackElement(method_args, [], Counter(method_name, 0))]
         self.java_class = java_class
         #self.method_name = method_name
 
@@ -129,14 +129,14 @@ def perform_push(runner: Interpreter, opr: Dict, element: StackElement):
     v = opr["value"]
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [v["value"]], element.counter.next_counter()))
 
-def perform_add(runner: Interpreter):
-    runner.stack.append("noop")
-    print("add")
+def perform_load(runner: Interpreter, opr: Dict, element: StackElement):
+    value = element.local_variables[opr["index"]]
+    runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
     
 method_mapper = {
     "push": perform_push,
-    "add": perform_add,
-    "return": perform_return
+    "return": perform_return,
+    "load": perform_load
 }
 
 #runner = Interpreter(["add", "add"])
@@ -146,7 +146,7 @@ def run_program(java_program: JavaProgram):
     # Ignore this for now
     raise NotImplementedError
 
-def run_method(java_class: JavaClass, method_name: str, method_args: Dict[str, JavaValue], environment: Optional[JavaProgram]=None) -> JavaValue | JavaError:
+def run_method(java_class: JavaClass, method_name: str, method_args: List[JavaValue], environment: Optional[JavaProgram]=None) -> JavaValue | JavaError:
     # This is the entry point, this function should create an
     # Interpreter instance, and then run it with the given
     # properties. It should raise an error
@@ -154,7 +154,7 @@ def run_method(java_class: JavaClass, method_name: str, method_args: Dict[str, J
 
     # The environment should allow referencing other classes
 
-    interpreter = Interpreter(java_class, method_name)
+    interpreter = Interpreter(java_class, method_name, method_args)
     return interpreter.run()
 
 

@@ -25,9 +25,9 @@ class TestSimple:
         assert result == 102
 
     def test_identity(self):
-        assert run_method(self.java_class, "identity", { "a" : IntValue(1) }, None) == IntValue(1)
-        assert run_method(self.java_class, "identity", { "a" : IntValue(2) }, None) == IntValue(2)
-        assert run_method(self.java_class, "identity", { "a" : IntValue(-5) }, None) == IntValue(-5)
+        assert run_method(self.java_class, "identity", [1], None) == 1
+        assert run_method(self.java_class, "identity", [2], None) == 2
+        assert run_method(self.java_class, "identity", [-5], None) == -5
 
     def test_add(self):
         # Sanity check

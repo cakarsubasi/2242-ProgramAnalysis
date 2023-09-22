@@ -305,11 +305,11 @@ def perform_invoke(runner: Interpreter, opr: Operation, element: StackElement):
     class_name = opr.method["ref"]["name"]
     args = []
     for i in range(len(opr.method["args"])):
-        args.append(element.operational_stack[(i + 1) * -1])
+        args.append(element.operational_stack[(i + 1) * -1].value)
     args.reverse()
     result = run_method(runner.get_class(class_name, method_name), method_name, args, runner.memory)
     if opr.method["returns"] is not None:
-        runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack + [Value(result)], element.counter.next_counter()))
     else:
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 

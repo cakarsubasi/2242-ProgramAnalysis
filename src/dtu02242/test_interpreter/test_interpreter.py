@@ -1,4 +1,4 @@
-from dtu02242.interpreter.interpreter import run_method, IntValue, RefValue, ArrayValue, JavaError
+from dtu02242.interpreter.interpreter import run_method, RefValue, ArrayValue, JavaError
 from dtu02242.interpreter.parser import get_file_text, find_files_by_type, JavaClass
 from pathlib import Path
 import json
@@ -71,7 +71,7 @@ class TestArray:
         assert str(ex.value) == "java/lang/AssertionError" 
         # need to decide on how to handle Java assert statements
         #array = RefValue(ArrayValue([]))
-        #assert run_method(self.java_class, "firstSafe", { "vals" : array }, None) == 0
+        #assert run_method(self.java_class, "firstSafe", { "vals" : array }, None) == IntValue(0)
 
 
     def test_access(self):        
@@ -81,7 +81,7 @@ class TestArray:
         assert run_method(self.java_class, "access", [2, array], None) == 3
 
     def test_newArray(self):
-        assert run_method(self.java_class, "newArray", {}, None) == IntValue(1)
+        assert run_method(self.java_class, "newArray", {}, None) == 1
 
     def test_newArrayOutOfBounds(self):
         with pytest.raises(Exception) as ex:
@@ -101,15 +101,17 @@ class TestArray:
         assert str(ex_2.value) == "java/lang/AssertionError"
 
     def test_bubbleSort(self):
-        array = RefValue(ArrayValue([IntValue(3), IntValue(1), IntValue(2)]))
+        array = [3, 1, 2]
         result = run_method(self.java_class, "bubbleSort", {"vals": array}, None)
-        assert result == RefValue(ArrayValue([IntValue(1), IntValue(2), IntValue(3)]))
+        assert result == [1, 2, 3]
 
     def test_aWierdOneOutOfBounds(self):
-        assert run_method(self.java_class, "aWierdOneOutOfBounds", {}, None) is JavaError
+        with pytest.raises(Exception) as ex:
+            run_method(self.java_class, "aWierdOneOutOfBounds", {}, None)
+        assert str(ex.value) == "Index out of bounds"
 
     def test_aWierdOneWithinBounds(self):
-        assert run_method(self.java_class, "aWierdOneOutOfBounds", {}, None) == IntValue(1)
+        assert run_method(self.java_class, "aWierdOneWithinBounds", {}, None) == 1
 
 @pytest.mark.skip(reason="First get TestSimple working")
 class TestCalls:
@@ -125,13 +127,13 @@ class TestCalls:
         assert run_method(self.java_class, "helloWorld", {}, None) is None
 
     def test_fib(self):
-        assert run_method(self.java_class, "fib", {"n" : IntValue(0)}) == IntValue(1)
-        assert run_method(self.java_class, "fib", {"n" : IntValue(1)}) == IntValue(1)
-        assert run_method(self.java_class, "fib", {"n" : IntValue(2)}) == IntValue(2)
-        assert run_method(self.java_class, "fib", {"n" : IntValue(3)}) == IntValue(3)
-        assert run_method(self.java_class, "fib", {"n" : IntValue(4)}) == IntValue(5)
-        assert run_method(self.java_class, "fib", {"n" : IntValue(5)}) == IntValue(8)
-        assert run_method(self.java_class, "fib", {"n" : IntValue(6)}) == IntValue(13)
+        assert run_method(self.java_class, "fib", [0]) == 1
+        assert run_method(self.java_class, "fib", [1]) == 1
+        assert run_method(self.java_class, "fib", [2]) == 2
+        assert run_method(self.java_class, "fib", [3]) == 3
+        assert run_method(self.java_class, "fib", [4]) == 5
+        assert run_method(self.java_class, "fib", [5]) == 8
+        assert run_method(self.java_class, "fib", [6]) == 13
         # after this point, the method should be so slow that it is a waste of time to test
         
         

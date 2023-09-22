@@ -153,7 +153,7 @@ def perform_return(runner: Interpreter, opr: Operation, element: StackElement):
     type = opr.type
     if type == None:
         return None
-    value = element.operational_stack[-1].value
+    value = element.operational_stack.pop().value
     return locate(type)(value)
 
 def perform_push(runner: Interpreter, opr: Operation, element: StackElement):
@@ -165,14 +165,14 @@ def perform_load(runner: Interpreter, opr: Operation, element: StackElement):
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
 def perform_add(runner: Interpreter, opr: Operation, element: StackElement):
-    first = element.operational_stack[-2].value
-    second = element.operational_stack[-1].value
+    second = element.operational_stack.pop().value
+    first = element.operational_stack.pop().value
     result = Value(first + second)
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
 
 def perform_strictly_greater(runner: Interpreter, opr: Operation, element: StackElement):
-    first = element.operational_stack[-2].value
-    second = element.operational_stack[-1].value
+    second = element.operational_stack.pop().value
+    first = element.operational_stack.pop().value
     if first > second:
         next_counter = Counter(element.counter.method_name, opr.target)
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
@@ -180,8 +180,8 @@ def perform_strictly_greater(runner: Interpreter, opr: Operation, element: Stack
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
 def perform_greater_or_equal(runner: Interpreter, opr: Operation, element: StackElement):
-    first = element.operational_stack[-2].value
-    second = element.operational_stack[-1].value
+    second = element.operational_stack.pop().value
+    first = element.operational_stack.pop().value
     if first >= second:
         next_counter = Counter(element.counter.method_name, opr.target)
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
@@ -189,7 +189,7 @@ def perform_greater_or_equal(runner: Interpreter, opr: Operation, element: Stack
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
 def perform_store(runner: Interpreter, opr: Operation, element: StackElement):
-    value = element.operational_stack[-1]
+    value = element.operational_stack.pop()
     local_vars = [x for x in element.local_variables]
     if len(local_vars) <= opr.index:
         local_vars.append(value)
@@ -198,7 +198,7 @@ def perform_store(runner: Interpreter, opr: Operation, element: StackElement):
     runner.stack.append(StackElement(local_vars, element.operational_stack, element.counter.next_counter()))
 
 def perform_less_than_or_equal_zero(runner: Interpreter, opr: Operation, element: StackElement):
-    first = element.operational_stack[-1].value
+    first = element.operational_stack.pop().value
     second = 0
     if first <= second:
         next_counter = Counter(element.counter.method_name, opr.target)
@@ -207,7 +207,7 @@ def perform_less_than_or_equal_zero(runner: Interpreter, opr: Operation, element
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
 def perform_not_equal_zero(runner: Interpreter, opr: Operation, element: StackElement):
-    first = element.operational_stack[-1].value
+    first = element.operational_stack.pop().value
     second = 0
     if first != second:
         next_counter = Counter(element.counter.method_name, opr.target)
@@ -222,8 +222,8 @@ def perform_increment(runner: Interpreter, opr: Operation, element: StackElement
     runner.stack.append(StackElement(local_vars, element.operational_stack, element.counter.next_counter()))
 
 def perform_multiplication(runner: Interpreter, opr: Operation, element: StackElement):
-    first = element.operational_stack[-2].value
-    second = element.operational_stack[-1].value
+    second = element.operational_stack.pop().value
+    first = element.operational_stack.pop().value
     result = Value(first * second)
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
 
@@ -232,22 +232,22 @@ def perform_goto(runner: Interpreter, opr: Operation, element: StackElement):
     runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
 
 def perform_new_array(runner: Interpreter, opr: Operation, element: StackElement):
-    size = element.operational_stack[-1].value
+    size = element.operational_stack.pop().value
     memory_address = uuid.uuid4()
     runner.memory[memory_address] = ArrayValue(size, [0] * size)
     value = Value(memory_address)
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
 def perform_array_store(runner: Interpreter, opr: Operation, element: StackElement):
-    arr_address = element.operational_stack[-3].value
-    index = element.operational_stack[-2].value
-    value_to_store = element.operational_stack[-1].value
+    value_to_store = element.operational_stack.pop().value
+    index = element.operational_stack.pop().value
+    arr_address = element.operational_stack.pop().value
     runner.memory[arr_address].value[index] = value_to_store
     runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
 def perform_array_load(runner: Interpreter, opr: Operation, element: StackElement):
-    arr_address = element.operational_stack[-2].value
-    index = element.operational_stack[-1].value
+    index = element.operational_stack.pop().value
+    arr_address = element.operational_stack.pop().value
     value = Value(runner.memory[arr_address].value[index])
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
@@ -257,7 +257,7 @@ def perform_get(runner: Interpreter, opr: Operation, element: StackElement):
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [Value(0)], element.counter.next_counter()))
 
 def perform_array_length(runner: Interpreter, opr: Operation, element: StackElement):
-    arr_address = element.operational_stack[-1].value
+    arr_address = element.operational_stack.pop().value
     arr_length = runner.memory[arr_address].length
     value = Value(arr_length)
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
@@ -286,7 +286,7 @@ def perform_invoke(runner: Interpreter, opr: Operation, element: StackElement):
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
 def peform_throw(runner: Interpreter, opr: Operation, element: StackElement):
-    exception_pointer = element.operational_stack[-1].value
+    exception_pointer = element.operational_stack.pop().value
     excpetion = runner.memory[exception_pointer]
     raise Exception(excpetion)
 

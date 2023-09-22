@@ -190,6 +190,12 @@ def perform_increment(runner: Interpreter, opr: Operation, element: StackElement
     local_vars[opr.index] = value + opr.amount
     runner.stack.append(StackElement(local_vars, element.operational_stack, element.counter.next_counter()))
 
+def perform_multiplication(runner: Interpreter, opr: Operation, element: StackElement):
+    first = element.operational_stack[-2].value
+    second = element.operational_stack[-1].value
+    result = Value(first * second)
+    runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
+
 method_mapper = {
     "push": perform_push,
     "return": perform_return,
@@ -198,7 +204,8 @@ method_mapper = {
     "if-gt": perform_strictly_greater,
     "store": perform_store,
     "ifz-le": perform_less_than_or_equal_zero,
-    "incr": perform_increment
+    "incr": perform_increment,
+    "binary-mul": perform_multiplication,
 }
 
 def run_program(java_program: JavaProgram):

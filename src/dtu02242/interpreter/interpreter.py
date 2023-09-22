@@ -169,6 +169,15 @@ def perform_strictly_greater(runner: Interpreter, opr: Operation, element: Stack
     else:
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
+def perform_greater_or_equal(runner: Interpreter, opr: Operation, element: StackElement):
+    first = element.operational_stack[-2].value
+    second = element.operational_stack[-1].value
+    if first >= second:
+        next_counter = Counter(element.counter.method_name, opr.target)
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
+    else:
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
+
 def perform_store(runner: Interpreter, opr: Operation, element: StackElement):
     value = element.operational_stack[-1]
     local_vars = [x for x in element.local_variables]
@@ -234,6 +243,7 @@ method_mapper = {
     "load": perform_load,
     "binary-add": perform_add,
     "if-gt": perform_strictly_greater,
+    "if-ge": perform_greater_or_equal,
     "store": perform_store,
     "ifz-le": perform_less_than_or_equal_zero,
     "ifz-ne": perform_not_equal_zero,

@@ -49,17 +49,16 @@ class TestSimple:
         assert run_method(self.java_class, "factorial", [6], None) == 720
 
 
-@pytest.mark.skip(reason="First get TestSimple working")
 class TestArray:
     with open("course-02242-examples/decompiled/dtu/compute/exec/Array.json", "r") as fp:
         json_dict = json.load(fp)
         java_class = JavaClass(json_dict=json_dict)
 
     def test_first(self):
-        array = RefValue(ArrayValue([IntValue(0), IntValue(1), IntValue(3)]))
-        assert run_method(self.java_class, "first", { "vals" : array }, None) == IntValue(0)
+        array = [0, 1, 3]
+        assert run_method(self.java_class, "first", [array], None) == 0
         array_empty = RefValue(ArrayValue([])) # TODO: Java still types empty arrays, so should handle that
-        # assert run_method(self.java_class, "first", { "vals" : array }, None) == IntValue(0)
+        # assert run_method(self.java_class, "first", { "vals" : array }, None) == 0
         # No way to assert this right now without deciding on error handling
         # Best to use our own classes rather than relying on Python exceptions as Python 
         # exceptions can be inflexible
@@ -73,10 +72,10 @@ class TestArray:
 
 
     def test_access(self):        
-        array = RefValue(ArrayValue([IntValue(0), IntValue(1), IntValue(3)]))
-        assert run_method(self.java_class, "access", { "i": IntValue(0) , "vals" : array }, None) == IntValue(0)
-        assert run_method(self.java_class, "access", { "i": IntValue(1) , "vals" : array }, None) == IntValue(1)
-        assert run_method(self.java_class, "access", { "i": IntValue(2) , "vals" : array }, None) == IntValue(3)
+        array = [0, 1, 3]
+        assert run_method(self.java_class, "access", [0, array], None) == 0
+        assert run_method(self.java_class, "access", [1, array], None) == 1
+        assert run_method(self.java_class, "access", [2, array], None) == 3
 
     def test_newArray(self):
         assert run_method(self.java_class, "newArray", {}, None) == IntValue(1)

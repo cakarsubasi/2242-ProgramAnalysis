@@ -203,6 +203,12 @@ def perform_goto(runner: Interpreter, opr: Operation, element: StackElement):
     next_counter = Counter(element.counter.method_name, opr.target)
     runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
 
+def perform_array_load(runner: Interpreter, opr: Operation, element: StackElement):
+    arr = element.operational_stack[-2].value
+    index = element.operational_stack[-1].value
+    value = Value(arr[index])
+    runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
+
 method_mapper = {
     "push": perform_push,
     "return": perform_return,
@@ -214,6 +220,7 @@ method_mapper = {
     "incr": perform_increment,
     "binary-mul": perform_multiplication,
     "goto": perform_goto,
+    "array_load": perform_array_load,
 }
 
 def run_program(java_program: JavaProgram):

@@ -113,7 +113,6 @@ class TestArray:
     def test_aWierdOneWithinBounds(self):
         assert run_method(self.java_class, "aWierdOneWithinBounds", {}, None) == 1
 
-@pytest.mark.skip(reason="First get TestSimple working")
 class TestCalls:
     with open("course-02242-examples/decompiled/dtu/compute/exec/Calls.json", "r") as fp:
         json_dict = json.load(fp)

@@ -304,8 +304,8 @@ def perform_invoke(runner: Interpreter, opr: Operation, element: StackElement):
     method_name = opr.method["name"]
     class_name = opr.method["ref"]["name"]
     args = []
-    for i in range(len(opr.method["args"])):
-        args.append(element.operational_stack[(i + 1) * -1].value)
+    for _ in range(len(opr.method["args"])):
+        args.append(element.operational_stack.pop().value)
     args.reverse()
     result = run_method(runner.get_class(class_name, method_name), method_name, args, runner.memory)
     if opr.method["returns"] is not None:

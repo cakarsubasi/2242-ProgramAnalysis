@@ -238,6 +238,13 @@ def perform_new_array(runner: Interpreter, opr: Operation, element: StackElement
     value = Value(memory_address)
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
+def perform_array_store(runner: Interpreter, opr: Operation, element: StackElement):
+    arr_address = element.operational_stack[-3].value
+    index = element.operational_stack[-2].value
+    value_to_store = element.operational_stack[-1].value
+    runner.memory[arr_address].value[index] = value_to_store
+    runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
+
 def perform_array_load(runner: Interpreter, opr: Operation, element: StackElement):
     arr_address = element.operational_stack[-2].value
     index = element.operational_stack[-1].value
@@ -297,6 +304,7 @@ method_mapper = {
     "binary-mul": perform_multiplication,
     "goto": perform_goto,
     "newarray": perform_new_array,
+    "array_store": perform_array_store,
     "array_load": perform_array_load,
     "arraylength": perform_array_length,
     "get": perform_get,

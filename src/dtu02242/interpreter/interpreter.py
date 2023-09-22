@@ -196,6 +196,10 @@ def perform_multiplication(runner: Interpreter, opr: Operation, element: StackEl
     result = Value(first * second)
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
 
+def perform_goto(runner: Interpreter, opr: Operation, element: StackElement):
+    next_counter = Counter(element.counter.method_name, opr.target)
+    runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
+
 method_mapper = {
     "push": perform_push,
     "return": perform_return,
@@ -206,6 +210,7 @@ method_mapper = {
     "ifz-le": perform_less_than_or_equal_zero,
     "incr": perform_increment,
     "binary-mul": perform_multiplication,
+    "goto": perform_goto,
 }
 
 def run_program(java_program: JavaProgram):

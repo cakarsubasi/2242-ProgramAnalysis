@@ -84,7 +84,9 @@ class TestArray:
         assert run_method(self.java_class, "newArray", {}, None) == IntValue(1)
 
     def test_newArrayOutOfBounds(self):
-        assert run_method(self.java_class, "newArray", {}, None) is JavaError
+        with pytest.raises(Exception) as ex:
+            run_method(self.java_class, "newArrayOutOfBounds", {}, None)
+        assert str(ex.value) == "Index out of bounds"
 
     def test_accessSafe(self):
         array = RefValue(ArrayValue([IntValue(0), IntValue(1), IntValue(3)]))

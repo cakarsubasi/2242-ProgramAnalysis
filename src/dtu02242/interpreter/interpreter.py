@@ -248,7 +248,10 @@ def perform_array_store(runner: Interpreter, opr: Operation, element: StackEleme
 def perform_array_load(runner: Interpreter, opr: Operation, element: StackElement):
     index = element.operational_stack.pop().value
     arr_address = element.operational_stack.pop().value
-    value = Value(runner.memory[arr_address].value[index])
+    arr = runner.memory[arr_address]
+    if arr.length <= index:
+        raise Exception("Index out of bounds")
+    value = Value(arr.value[index])
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
 def perform_get(runner: Interpreter, opr: Operation, element: StackElement):

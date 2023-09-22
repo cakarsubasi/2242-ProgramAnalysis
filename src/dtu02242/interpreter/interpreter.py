@@ -170,6 +170,12 @@ def perform_add(runner: Interpreter, opr: Operation, element: StackElement):
     result = Value(first + second)
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
 
+def perform_sub(runner: Interpreter, opr: Operation, element: StackElement):
+    second = element.operational_stack.pop().value
+    first = element.operational_stack.pop().value
+    result = Value(first - second)
+    runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
+
 def perform_strictly_less(runner: Interpreter, opr: Operation, element: StackElement):
     second = element.operational_stack.pop().value
     first = element.operational_stack.pop().value
@@ -317,6 +323,8 @@ method_mapper = {
     "return": perform_return,
     "load": perform_load,
     "binary-add": perform_add,
+    "binary-sub": perform_sub,
+    "binary-mul": perform_multiplication,
     "if-lt": perform_strictly_less,
     "if-le": perform_less_or_equal,
     "if-gt": perform_strictly_greater,
@@ -325,7 +333,6 @@ method_mapper = {
     "ifz-le": perform_less_than_or_equal_zero,
     "ifz-ne": perform_not_equal_zero,
     "incr": perform_increment,
-    "binary-mul": perform_multiplication,
     "goto": perform_goto,
     "newarray": perform_new_array,
     "array_store": perform_array_store,

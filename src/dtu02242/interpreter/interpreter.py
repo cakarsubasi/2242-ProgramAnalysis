@@ -269,6 +269,11 @@ def perform_invoke(runner: Interpreter, opr: Operation, element: StackElement):
     else:
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
+def peform_throw(runner: Interpreter, opr: Operation, element: StackElement):
+    exception_pointer = element.operational_stack[-1].value
+    excpetion = runner.memory[exception_pointer]
+    raise Exception(excpetion)
+
 method_mapper = {
     "push": perform_push,
     "return": perform_return,
@@ -288,6 +293,7 @@ method_mapper = {
     "new": perform_new,
     "dup": perform_dup,
     "invoke": perform_invoke,
+    "throw": peform_throw,
 }
 
 def run_program(java_program: JavaProgram):

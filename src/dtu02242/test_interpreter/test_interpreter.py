@@ -64,11 +64,14 @@ class TestArray:
         # exceptions can be inflexible
 
     def test_firstSafe(self):
-        array = RefValue(ArrayValue([IntValue(0), IntValue(1), IntValue(3)]))
-        assert run_method(self.java_class, "firstSafe", { "vals" : array }, None) == IntValue(0)
+        array = [1, 2, 3]
+        assert run_method(self.java_class, "firstSafe", [array], None) == 1
+        with pytest.raises(Exception) as ex:
+            run_method(self.java_class, "firstSafe", [[]], None)
+        assert str(ex.value) == "java/lang/AssertionError" 
         # need to decide on how to handle Java assert statements
         #array = RefValue(ArrayValue([]))
-        #assert run_method(self.java_class, "firstSafe", { "vals" : array }, None) == IntValue(0)
+        #assert run_method(self.java_class, "firstSafe", { "vals" : array }, None) == 0
 
 
     def test_access(self):        

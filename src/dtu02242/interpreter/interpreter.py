@@ -148,11 +148,18 @@ def perform_push(runner: Interpreter, opr: Operation, element: StackElement):
 def perform_load(runner: Interpreter, opr: Operation, element: StackElement):
     value = element.local_variables[opr.index]
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
-    
+
+def perform_add(runner: Interpreter, opr: Operation, element: StackElement):
+    first = element.operational_stack[-2].value
+    second = element.operational_stack[-1].value
+    result = Value(first + second)
+    runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
+
 method_mapper = {
     "push": perform_push,
     "return": perform_return,
-    "load": perform_load
+    "load": perform_load,
+    "binary-add": perform_add,
 }
 
 def run_program(java_program: JavaProgram):

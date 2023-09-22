@@ -31,9 +31,9 @@ class TestSimple:
 
     def test_add(self):
         # Sanity check
-        assert run_method(self.java_class, "add", { "a" : IntValue(1), "b" : IntValue(1) }, None) == IntValue(2)
-        assert run_method(self.java_class, "add", { "a" : IntValue(0), "b" : IntValue(1) }, None) == IntValue(1)
-        assert run_method(self.java_class, "add", { "a" : IntValue(-1), "b" : IntValue(1) }, None) == IntValue(0)
+        assert run_method(self.java_class, "add", [1, 1], None) == 2
+        assert run_method(self.java_class, "add", [0, 1], None) == 1
+        assert run_method(self.java_class, "add", [-1, 1], None) == 0
 
     def test_min(self):
         assert run_method(self.java_class, "min", { "a" : IntValue(-1), "b" : IntValue(1) }, None) == IntValue(-1)

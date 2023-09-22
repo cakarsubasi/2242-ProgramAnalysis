@@ -102,8 +102,8 @@ class TestArray:
 
     def test_bubbleSort(self):
         array = [3, 1, 2]
-        result = run_method(self.java_class, "bubbleSort", {"vals": array}, None)
-        assert result == [1, 2, 3]
+        run_method(self.java_class, "bubbleSort", [array], None)
+        assert array == [1, 2, 3]
 
     def test_aWierdOneOutOfBounds(self):
         with pytest.raises(Exception) as ex:

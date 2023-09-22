@@ -88,47 +88,47 @@ class Counter:
 
 class StackElement:
 
-    def __init__(self, counter: Counter):
-        self.local_variables: List[JavaValue] = []
-        self.operational_stack: List[JavaValue] = []
+    def __init__(self, local_variables, operational_stack, counter: Counter):
+        self.local_variables: List[JavaValue] = local_variables
+        self.operational_stack: List[JavaValue] = operational_stack
         self.counter: Counter = counter
 
 class Interpreter:
 
     def __init__(self, java_class, method_name):
         self.memory: Dict[str, JavaValue] = {}
-        self.stack: List[StackElement] = [([], [], (method_name, 0))]
+        self.stack: List[StackElement] = [StackElement([], [], (method_name, 0))]
         self.java_class = java_class
         #self.method_name = method_name
 
 
     def run(self):
-        if len(self.stack) == 0:
-            return
-        element = self.stack[-1]
-        (method_name, i) = element[2]
-        method_bcode = self.java_class.get_method(method_name)["code"]["bytecode"][i]
-        self.run_operation(method_bcode, element)
-        self.run()
+        for _ in range(10):
+            element = self.stack[-1]
+            (method_name, i) = element.counter
+            method_bcode = self.java_class.get_method(method_name)["code"]["bytecode"][i]
+            if method_bcode["opr"] == "return":
+                return perform_return(self, method_bcode, element)
+            self.run_operation(method_bcode, element)
 
     def run_operation(self, operation, element):
         method = method_mapper[operation["opr"]]
         method(self, operation, element)
 
 
-def perform_return(runner: Interpreter, opr: Dict, element):
+def perform_return(runner: Interpreter, opr: Dict, element: StackElement):
     runner.stack.pop()
     type = opr["type"]
     if type == None:
         return None
-    value = element[1][-1]
+    value = element.operational_stack[-1]
     return locate(type)(value)
 
-def perform_push(runner: Interpreter, opr: Dict, element):
+def perform_push(runner: Interpreter, opr: Dict, element: StackElement):
     runner.stack.pop()
     v = opr["value"]
-    method_name, i = element[2]
-    runner.stack.append((element[0], element[1] + [v["value"]], (method_name, i+1)))
+    method_name, i = element.counter
+    runner.stack.append(StackElement(element.local_variables, element.operational_stack + [v["value"]], (method_name, i+1)))
 
 def perform_add(runner: Interpreter):
     runner.stack.append("noop")
@@ -156,9 +156,7 @@ def run_method(java_class: JavaClass, method_name: str, method_args: Dict[str, J
     # The environment should allow referencing other classes
 
     interpreter = Interpreter(java_class, method_name)
-    interpreter.run()
-
-    return IntValue(0)
+    return interpreter.run()
 
 
 

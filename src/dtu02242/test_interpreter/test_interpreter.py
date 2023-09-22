@@ -18,11 +18,11 @@ class TestSimple:
 
     def test_zero(self):
         result = run_method(self.java_class, "zero", {}, None)
-        assert result == IntValue(value=0)
+        assert result == 0
 
     def test_hundredAndTwo(self):
         result = run_method(self.java_class, "hundredAndTwo", {}, None)
-        assert result == IntValue(value=102)
+        assert result == 102
 
     def test_identity(self):
         assert run_method(self.java_class, "identity", { "a" : IntValue(1) }, None) == IntValue(1)

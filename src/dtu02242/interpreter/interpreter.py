@@ -187,6 +187,15 @@ def perform_less_than_or_equal_zero(runner: Interpreter, opr: Operation, element
     else:
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
+def perform_not_equal_zero(runner: Interpreter, opr: Operation, element: StackElement):
+    first = element.operational_stack[-1].value
+    second = 0
+    if first != second:
+        next_counter = Counter(element.counter.method_name, opr.target)
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
+    else:
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
+
 def perform_increment(runner: Interpreter, opr: Operation, element: StackElement):
     local_vars = [x for x in element.local_variables]
     value = element.local_variables[opr.index].value
@@ -222,6 +231,7 @@ method_mapper = {
     "if-gt": perform_strictly_greater,
     "store": perform_store,
     "ifz-le": perform_less_than_or_equal_zero,
+    "ifz-ne": perform_not_equal_zero,
     "incr": perform_increment,
     "binary-mul": perform_multiplication,
     "goto": perform_goto,

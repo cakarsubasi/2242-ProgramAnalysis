@@ -2,6 +2,7 @@ from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 from .parser import JavaClass, JavaProgram
 from pydoc import locate
+import uuid
 
 """
 noop
@@ -110,6 +111,7 @@ class Operation:
         self.condition: str = json_doc["condition"] if "condition" in json_doc else None
         self.target: int = json_doc["target"] if "target" in json_doc else None
         self.amount: int = json_doc["amount"] if "amount" in json_doc else None
+        self.class_: str = json_doc["class"] if "class" in json_doc else None
 
     def get_name(self):
         if self.operant:
@@ -237,6 +239,12 @@ def perform_array_length(runner: Interpreter, opr: Operation, element: StackElem
     value = Value(len(arr))
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
+def perform_new(runner: Interpreter, opr: Operation, element: StackElement):
+    memory_address = uuid.uuid4() # Create random memory access
+    runner.memory[memory_address] = opr.class_
+    value = Value(memory_address, "ref")
+    runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
+
 method_mapper = {
     "push": perform_push,
     "return": perform_return,
@@ -253,6 +261,7 @@ method_mapper = {
     "array_load": perform_array_load,
     "arraylength": perform_array_length,
     "get": perform_get,
+    "new": perform_new,
 }
 
 def run_program(java_program: JavaProgram):

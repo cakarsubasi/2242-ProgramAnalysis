@@ -18,35 +18,35 @@ class TestSimple:
 
     def test_zero(self):
         result = run_method(self.java_class, "zero", {}, None)
-        assert result == IntValue(value=0)
+        assert result == 0
 
     def test_hundredAndTwo(self):
         result = run_method(self.java_class, "hundredAndTwo", {}, None)
-        assert result == IntValue(value=102)
+        assert result == 102
 
     def test_identity(self):
-        assert run_method(self.java_class, "identity", { "a" : IntValue(1) }, None) == IntValue(1)
-        assert run_method(self.java_class, "identity", { "a" : IntValue(2) }, None) == IntValue(2)
-        assert run_method(self.java_class, "identity", { "a" : IntValue(-5) }, None) == IntValue(-5)
+        assert run_method(self.java_class, "identity", [1], None) == 1
+        assert run_method(self.java_class, "identity", [2], None) == 2
+        assert run_method(self.java_class, "identity", [-5], None) == -5
 
     def test_add(self):
         # Sanity check
-        assert run_method(self.java_class, "add", { "a" : IntValue(1), "b" : IntValue(1) }, None) == IntValue(2)
-        assert run_method(self.java_class, "add", { "a" : IntValue(0), "b" : IntValue(1) }, None) == IntValue(1)
-        assert run_method(self.java_class, "add", { "a" : IntValue(-1), "b" : IntValue(1) }, None) == IntValue(0)
+        assert run_method(self.java_class, "add", [1, 1], None) == 2
+        assert run_method(self.java_class, "add", [0, 1], None) == 1
+        assert run_method(self.java_class, "add", [-1, 1], None) == 0
 
     def test_min(self):
-        assert run_method(self.java_class, "min", { "a" : IntValue(-1), "b" : IntValue(1) }, None) == IntValue(-1)
-        assert run_method(self.java_class, "min", { "a" : IntValue(1), "b" : IntValue(-1) }, None) == IntValue(-1)
-        assert run_method(self.java_class, "min", { "a" : IntValue(1), "b" : IntValue(1) }, None) == IntValue(1)
+        assert run_method(self.java_class, "min", [-1, 1], None) == -1
+        assert run_method(self.java_class, "min", [1, -1], None) == -1
+        assert run_method(self.java_class, "min", [1, 1], None) == 1
 
     def test_factorial(self):
-        assert run_method(self.java_class, "factorial", { "n" : IntValue(1) }, None) == IntValue(1)
-        assert run_method(self.java_class, "factorial", { "n" : IntValue(2) }, None) == IntValue(2)
-        assert run_method(self.java_class, "factorial", { "n" : IntValue(3) }, None) == IntValue(6)
-        assert run_method(self.java_class, "factorial", { "n" : IntValue(4) }, None) == IntValue(24)
-        assert run_method(self.java_class, "factorial", { "n" : IntValue(5) }, None) == IntValue(120)
-        assert run_method(self.java_class, "factorial", { "n" : IntValue(6) }, None) == IntValue(720)
+        assert run_method(self.java_class, "factorial", [1], None) == 1
+        assert run_method(self.java_class, "factorial", [2], None) == 2
+        assert run_method(self.java_class, "factorial", [3], None) == 6
+        assert run_method(self.java_class, "factorial", [4], None) == 24
+        assert run_method(self.java_class, "factorial", [5], None) == 120
+        assert run_method(self.java_class, "factorial", [6], None) == 720
 
 
 @pytest.mark.skip(reason="First get TestSimple working")

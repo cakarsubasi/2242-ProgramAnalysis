@@ -6,6 +6,7 @@ JsonDict = Dict[str, Any]
 
 class JavaClass:
     def __init__(self, json_dict: JsonDict) -> None:
+        self.name = json_dict['name']
         self.json_dict = json_dict
 
     def get_methods(self) -> List[JsonDict]:
@@ -28,9 +29,6 @@ class JavaProgram:
 
     def get_class(self, class_name: str) -> JavaClass:
         raise NotImplementedError
-
-
-
 
 def find_files_by_type(root_dir: Path, file_type: str) -> List[str]:
     '''Get the str path of all files in a given root directory of a given file type'''

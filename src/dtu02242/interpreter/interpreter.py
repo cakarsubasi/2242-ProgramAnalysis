@@ -168,12 +168,19 @@ def perform_strictly_greater(runner: Interpreter, opr: Operation, element: Stack
     else:
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
+def perform_store(runner: Interpreter, opr: Operation, element: StackElement):
+    value = element.operational_stack[-1].value
+    local_vars = [x for x in element.local_variables]
+    local_vars[opr.index] = value
+    runner.stack.append(StackElement(local_vars, element.operational_stack + [value], element.counter.next_counter()))
+
 method_mapper = {
     "push": perform_push,
     "return": perform_return,
     "load": perform_load,
     "binary-add": perform_add,
     "if-gt": perform_strictly_greater,
+    "store": perform_store,
 }
 
 def run_program(java_program: JavaProgram):

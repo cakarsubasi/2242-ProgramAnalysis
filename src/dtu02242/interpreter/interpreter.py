@@ -174,6 +174,16 @@ def perform_store(runner: Interpreter, opr: Operation, element: StackElement):
     local_vars[opr.index] = value
     runner.stack.append(StackElement(local_vars, element.operational_stack + [value], element.counter.next_counter()))
 
+def perform_less_than_or_equal_zero(runner: Interpreter, opr: Operation, element: StackElement):
+    first = 0
+    second = element.operational_stack[-1].value
+    if first <= second:
+        next_counter = Counter(element.counter.method_name, opr.target)
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
+    else:
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
+
+
 method_mapper = {
     "push": perform_push,
     "return": perform_return,
@@ -181,6 +191,7 @@ method_mapper = {
     "binary-add": perform_add,
     "if-gt": perform_strictly_greater,
     "store": perform_store,
+    "ifz-le": perform_less_than_or_equal_zero,
 }
 
 def run_program(java_program: JavaProgram):

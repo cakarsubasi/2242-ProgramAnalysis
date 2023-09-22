@@ -1,6 +1,7 @@
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 from .parser import JavaClass, JavaProgram
+from pydoc import locate
 
 """
 noop
@@ -94,35 +95,49 @@ class StackElement:
 
 class Interpreter:
 
-    def __init__(self, json_program):
+    def __init__(self, java_class, method_name):
         self.memory: Dict[str, JavaValue] = {}
-        self.stack: List[StackElement] = json_program
-        self.json_program = json_program
+        self.stack: List[StackElement] = [([], [], (method_name, 0))]
+        self.java_class = java_class
+        #self.method_name = method_name
+
 
     def run(self):
         if len(self.stack) == 0:
             return
-        element = self.stack.pop(-1)
-        # operation = self.json_program.bytecode[element.method_name][element.counter]
-        operation = element
-        self.run_operation(operation)
+        element = self.stack[-1]
+        (method_name, i) = element[2]
+        method_bcode = self.java_class.get_method(method_name)["code"]["bytecode"][i]
+        self.run_operation(method_bcode, element)
         self.run()
 
-    def run_operation(self, operation):
-        method = method_mapper[operation]
-        method(self)
+    def run_operation(self, operation, element):
+        method = method_mapper[operation["opr"]]
+        method(self, operation, element)
 
 
-def perform_noop(runner: Interpreter):
-    print("example")
+def perform_return(runner: Interpreter, opr: Dict, element):
+    runner.stack.pop()
+    type = opr["type"]
+    if type == None:
+        return None
+    value = element[1][-1]
+    return locate(type)(value)
+
+def perform_push(runner: Interpreter, opr: Dict, element):
+    runner.stack.pop()
+    v = opr["value"]
+    method_name, i = element[2]
+    runner.stack.append((element[0], element[1] + [v["value"]], (method_name, i+1)))
 
 def perform_add(runner: Interpreter):
     runner.stack.append("noop")
     print("add")
-
+    
 method_mapper = {
-    "noop": perform_noop,
+    "push": perform_push,
     "add": perform_add,
+    "return": perform_return
 }
 
 #runner = Interpreter(["add", "add"])
@@ -139,5 +154,11 @@ def run_method(java_class: JavaClass, method_name: str, method_args: Dict[str, J
     # if it gets unexpected or inadequate arguments
 
     # The environment should allow referencing other classes
+
+    interpreter = Interpreter(java_class, method_name)
+    interpreter.run()
+
     return IntValue(0)
+
+
 

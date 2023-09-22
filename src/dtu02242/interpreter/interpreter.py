@@ -223,6 +223,11 @@ def perform_get(runner: Interpreter, opr: Operation, element: StackElement):
     # So we are just always going to assume that it works.
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [Value(1)], element.counter.next_counter()))
 
+def perform_array_length(runner: Interpreter, opr: Operation, element: StackElement):
+    arr = element.operational_stack[-1].value
+    value = Value(len(arr))
+    runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
+
 method_mapper = {
     "push": perform_push,
     "return": perform_return,
@@ -236,6 +241,7 @@ method_mapper = {
     "binary-mul": perform_multiplication,
     "goto": perform_goto,
     "array_load": perform_array_load,
+    "arraylength": perform_array_length,
     "get": perform_get,
 }
 

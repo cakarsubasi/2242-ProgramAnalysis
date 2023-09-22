@@ -231,6 +231,13 @@ def perform_goto(runner: Interpreter, opr: Operation, element: StackElement):
     next_counter = Counter(element.counter.method_name, opr.target)
     runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
 
+def perform_new_array(runner: Interpreter, opr: Operation, element: StackElement):
+    size = element.operational_stack[-1].value
+    memory_address = uuid.uuid4()
+    runner.memory[memory_address] = ArrayValue(size, [0] * size)
+    value = Value(memory_address)
+    runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
+
 def perform_array_load(runner: Interpreter, opr: Operation, element: StackElement):
     arr_address = element.operational_stack[-2].value
     index = element.operational_stack[-1].value
@@ -289,6 +296,7 @@ method_mapper = {
     "incr": perform_increment,
     "binary-mul": perform_multiplication,
     "goto": perform_goto,
+    "newarray": perform_new_array,
     "array_load": perform_array_load,
     "arraylength": perform_array_length,
     "get": perform_get,

@@ -245,6 +245,10 @@ def perform_new(runner: Interpreter, opr: Operation, element: StackElement):
     value = Value(memory_address, "ref")
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
+def perform_dup(runner: Interpreter, opr: Operation, element: StackElement):
+    value = element.operational_stack[-1]
+    runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
+
 method_mapper = {
     "push": perform_push,
     "return": perform_return,
@@ -262,6 +266,7 @@ method_mapper = {
     "arraylength": perform_array_length,
     "get": perform_get,
     "new": perform_new,
+    "dup": perform_dup,
 }
 
 def run_program(java_program: JavaProgram):

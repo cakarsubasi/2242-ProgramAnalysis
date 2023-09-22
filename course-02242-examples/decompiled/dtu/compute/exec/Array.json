@@ -1008,7 +1008,7 @@
             "opr": "push",
             "value": {
               "type": "integer",
-              "value": 0
+              "value": 1
             }
           },
           {

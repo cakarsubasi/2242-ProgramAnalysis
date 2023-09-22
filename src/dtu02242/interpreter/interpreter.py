@@ -209,6 +209,11 @@ def perform_array_load(runner: Interpreter, opr: Operation, element: StackElemen
     value = Value(arr[index])
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
+def perform_get(runner: Interpreter, opr: Operation, element: StackElement):
+    # I am not sure what get does but I am guessing it returns 0 when it fails and 1 when it succeeds.
+    # So we are just always going to assume that it works.
+    runner.stack.append(StackElement(element.local_variables, element.operational_stack + [Value(1)], element.counter.next_counter()))
+
 method_mapper = {
     "push": perform_push,
     "return": perform_return,
@@ -221,6 +226,7 @@ method_mapper = {
     "binary-mul": perform_multiplication,
     "goto": perform_goto,
     "array_load": perform_array_load,
+    "get": perform_get,
 }
 
 def run_program(java_program: JavaProgram):

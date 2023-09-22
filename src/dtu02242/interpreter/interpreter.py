@@ -170,6 +170,25 @@ def perform_add(runner: Interpreter, opr: Operation, element: StackElement):
     result = Value(first + second)
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
 
+def perform_strictly_less(runner: Interpreter, opr: Operation, element: StackElement):
+    second = element.operational_stack.pop().value
+    first = element.operational_stack.pop().value
+    if first < second:
+        next_counter = Counter(element.counter.method_name, opr.target)
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
+    else:
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
+
+def perform_less_or_equal(runner: Interpreter, opr: Operation, element: StackElement):
+    second = element.operational_stack.pop().value
+    first = element.operational_stack.pop().value
+    if first <= second:
+        next_counter = Counter(element.counter.method_name, opr.target)
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
+    else:
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
+
+
 def perform_strictly_greater(runner: Interpreter, opr: Operation, element: StackElement):
     second = element.operational_stack.pop().value
     first = element.operational_stack.pop().value
@@ -298,6 +317,8 @@ method_mapper = {
     "return": perform_return,
     "load": perform_load,
     "binary-add": perform_add,
+    "if-lt": perform_strictly_less,
+    "if-le": perform_less_or_equal,
     "if-gt": perform_strictly_greater,
     "if-ge": perform_greater_or_equal,
     "store": perform_store,

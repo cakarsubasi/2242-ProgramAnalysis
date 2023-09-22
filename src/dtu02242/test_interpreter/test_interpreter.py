@@ -89,12 +89,16 @@ class TestArray:
         assert str(ex.value) == "Index out of bounds"
 
     def test_accessSafe(self):
-        array = RefValue(ArrayValue([IntValue(0), IntValue(1), IntValue(3)]))
-        assert run_method(self.java_class, "accessSafe", { "i": IntValue(0) , "vals" : array }, None) == IntValue(0)
-        assert run_method(self.java_class, "accessSafe", { "i": IntValue(1) , "vals" : array }, None) == IntValue(1)
-        assert run_method(self.java_class, "accessSafe", { "i": IntValue(2) , "vals" : array }, None) == IntValue(3)
-        assert run_method(self.java_class, "accessSafe", { "i": IntValue(3) , "vals" : array }, None) is JavaError
-        assert run_method(self.java_class, "accessSafe", { "i": IntValue(-1) , "vals" : array }, None) is JavaError
+        array = [0, 1, 3]
+        assert run_method(self.java_class, "accessSafe", [0, array], None) == 0
+        assert run_method(self.java_class, "accessSafe", [1, array], None) == 1
+        assert run_method(self.java_class, "accessSafe", [2, array], None) == 3
+        with pytest.raises(Exception) as ex_1:
+            run_method(self.java_class, "accessSafe", [3, array], None)
+        assert str(ex_1.value) == "java/lang/AssertionError"
+        with pytest.raises(Exception) as ex_2:
+            run_method(self.java_class, "accessSafe", [-1, array], None)
+        assert str(ex_2.value) == "java/lang/AssertionError"
 
     def test_bubbleSort(self):
         array = RefValue(ArrayValue([IntValue(3), IntValue(1), IntValue(2)]))

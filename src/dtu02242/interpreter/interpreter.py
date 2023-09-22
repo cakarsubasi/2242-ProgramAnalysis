@@ -127,8 +127,8 @@ class Interpreter:
         #self.method_name = method_name
 
     def run(self):
-        while True:
-            element = self.stack[-1]
+        while len(self.stack) > 0:
+            element = self.stack.pop()
             operation = Operation(self.java_class.get_method(element.counter.method_name)["code"]["bytecode"][element.counter.counter])
             if operation.get_name() == "return":
                 return perform_return(self, operation, element)

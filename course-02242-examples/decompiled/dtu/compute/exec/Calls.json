@@ -280,7 +280,7 @@
             "offset": 19,
             "opr": "binary",
             "type": "int",
-            "operant": "mul"
+            "operant": "add"
           },
           {
             "offset": 20,

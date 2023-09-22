@@ -36,9 +36,9 @@ class TestSimple:
         assert run_method(self.java_class, "add", [-1, 1], None) == 0
 
     def test_min(self):
-        assert run_method(self.java_class, "min", { "a" : IntValue(-1), "b" : IntValue(1) }, None) == IntValue(-1)
-        assert run_method(self.java_class, "min", { "a" : IntValue(1), "b" : IntValue(-1) }, None) == IntValue(-1)
-        assert run_method(self.java_class, "min", { "a" : IntValue(1), "b" : IntValue(1) }, None) == IntValue(1)
+        assert run_method(self.java_class, "min", [-1, 1], None) == -1
+        assert run_method(self.java_class, "min", [1, -1], None) == -1
+        assert run_method(self.java_class, "min", [1, 1], None) == 1
 
     def test_factorial(self):
         assert run_method(self.java_class, "factorial", { "n" : IntValue(1) }, None) == IntValue(1)

@@ -107,10 +107,14 @@ class Operation:
         self.index: int = json_doc["index"] if "index" in json_doc else None
         self.operant: str = json_doc["operant"] if "operant" in json_doc else None
         self.value: Value = Value(json_doc["value"]["value"], json_doc["value"]["type"]) if "value" in json_doc else None
+        self.condition: str = json_doc["condition"] if "condition" in json_doc else None
+        self.target: int = json_doc["target"] if "target" in json_doc else None
 
     def get_name(self):
         if self.operant:
             return f"{self.opr}-{self.operant}"
+        if self.condition:
+            return f"{self.opr}-{self.condition}"
         return self.opr
 
 class Interpreter:
@@ -155,11 +159,21 @@ def perform_add(runner: Interpreter, opr: Operation, element: StackElement):
     result = Value(first + second)
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
 
+def perform_strictly_greater(runner: Interpreter, opr: Operation, element: StackElement):
+    first = element.operational_stack[-2].value
+    second = element.operational_stack[-1].value
+    if first > second:
+        next_counter = Counter(element.counter.method_name, opr.target)
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
+    else:
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
+
 method_mapper = {
     "push": perform_push,
     "return": perform_return,
     "load": perform_load,
     "binary-add": perform_add,
+    "if-gt": perform_strictly_greater,
 }
 
 def run_program(java_program: JavaProgram):

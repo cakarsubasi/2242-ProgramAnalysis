@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from .parser import JavaClass, JavaProgram
 from pydoc import locate
 import uuid
+import json
 
 """
 noop
@@ -112,6 +113,7 @@ class Operation:
         self.target: int = json_doc["target"] if "target" in json_doc else None
         self.amount: int = json_doc["amount"] if "amount" in json_doc else None
         self.class_: str = json_doc["class"] if "class" in json_doc else None
+        self.method: Dict[str, Any] = json_doc["method"] if "method" in json_doc else None
 
     def get_name(self):
         if self.operant:
@@ -122,11 +124,16 @@ class Operation:
 
 class Interpreter:
 
-    def __init__(self, java_class, method_name, method_args: List[Value]):
+    def __init__(self, java_class: JavaClass, method_name, method_args: List[Value]):
         self.memory: Dict[str, JavaValue] = {}
         self.stack: List[StackElement] = [StackElement(method_args, [], Counter(method_name, 0))]
         self.java_class = java_class
-        #self.method_name = method_name
+
+    def get_class(self, class_name, method_name) -> JavaClass:
+        if class_name == self.java_class.name:
+            return self.java_class
+        else:
+            return JavaClass(json.loads('{"name": "Mock", "methods" :[{"name":"' + method_name + '", "code": { "bytecode": [ { "offset": 0, "opr": "push", "value": { "type": "integer", "value": 4 } }, { "offset": 1, "opr": "return", "type": "int" } ] } } ] }'))
 
     def run(self):
         while len(self.stack) > 0:
@@ -249,6 +256,19 @@ def perform_dup(runner: Interpreter, opr: Operation, element: StackElement):
     value = element.operational_stack[-1]
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
+def perform_invoke(runner: Interpreter, opr: Operation, element: StackElement):
+    method_name = opr.method["name"]
+    class_name = opr.method["ref"]["name"]
+    args = []
+    for i in range(len(opr.method["args"])):
+        args.append(element.operational_stack[(i + 1) * -1])
+    args.reverse()
+    result = run_method(runner.get_class(class_name, method_name), method_name, args)
+    if opr.method["returns"] is not None:
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
+    else:
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
+
 method_mapper = {
     "push": perform_push,
     "return": perform_return,
@@ -267,6 +287,7 @@ method_mapper = {
     "get": perform_get,
     "new": perform_new,
     "dup": perform_dup,
+    "invoke": perform_invoke,
 }
 
 def run_program(java_program: JavaProgram):
@@ -284,6 +305,3 @@ def run_method(java_class: JavaClass, method_name: str, method_args: List[JavaVa
     args = [Value(x) for x in method_args]
     interpreter = Interpreter(java_class, method_name, args)
     return interpreter.run()
-
-
-

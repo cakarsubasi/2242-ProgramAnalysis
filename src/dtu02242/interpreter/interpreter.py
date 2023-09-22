@@ -85,6 +85,9 @@ class Counter:
     def __init__(self, method_name: str, counter: int):
         self.method_name = method_name
         self.counter = counter
+    
+    def next_counter(self):
+        return Counter(self.method_name, self.counter + 1)
 
 class StackElement:
 
@@ -97,7 +100,7 @@ class Interpreter:
 
     def __init__(self, java_class, method_name):
         self.memory: Dict[str, JavaValue] = {}
-        self.stack: List[StackElement] = [StackElement([], [], (method_name, 0))]
+        self.stack: List[StackElement] = [StackElement([], [], Counter(method_name, 0))]
         self.java_class = java_class
         #self.method_name = method_name
 
@@ -105,8 +108,7 @@ class Interpreter:
     def run(self):
         for _ in range(10):
             element = self.stack[-1]
-            (method_name, i) = element.counter
-            method_bcode = self.java_class.get_method(method_name)["code"]["bytecode"][i]
+            method_bcode = self.java_class.get_method(element.counter.method_name)["code"]["bytecode"][element.counter.counter]
             if method_bcode["opr"] == "return":
                 return perform_return(self, method_bcode, element)
             self.run_operation(method_bcode, element)
@@ -117,7 +119,6 @@ class Interpreter:
 
 
 def perform_return(runner: Interpreter, opr: Dict, element: StackElement):
-    runner.stack.pop()
     type = opr["type"]
     if type == None:
         return None
@@ -125,10 +126,8 @@ def perform_return(runner: Interpreter, opr: Dict, element: StackElement):
     return locate(type)(value)
 
 def perform_push(runner: Interpreter, opr: Dict, element: StackElement):
-    runner.stack.pop()
     v = opr["value"]
-    method_name, i = element.counter
-    runner.stack.append(StackElement(element.local_variables, element.operational_stack + [v["value"]], (method_name, i+1)))
+    runner.stack.append(StackElement(element.local_variables, element.operational_stack + [v["value"]], element.counter.next_counter()))
 
 def perform_add(runner: Interpreter):
     runner.stack.append("noop")

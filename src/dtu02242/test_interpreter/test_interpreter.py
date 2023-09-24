@@ -118,12 +118,10 @@ class TestCalls:
         json_dict = json.load(fp)
         java_class = JavaClass(json_dict=json_dict)
 
-    @pytest.mark.skip(reason="Decide on how to track output")
-    def test_helloWorld(self):
-        # Need to decide on how to handle stdin and stdout first
-        # For stdout, I propose passing a variable that will just collect
-        # the output which we can then inspect
-        assert run_method(self.java_class, "helloWorld", {}, None) is None
+    def test_helloWorld(self, capsys):
+        run_method(self.java_class, "helloWorld", {}, None)
+        out, err = capsys.readouterr()
+        assert out == "Hello, World!\n"
 
     def test_fib(self):
         assert run_method(self.java_class, "fib", [0]) == 1

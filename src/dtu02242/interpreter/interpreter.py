@@ -109,6 +109,8 @@ class Interpreter:
     def get_class(self, class_name, method_name) -> JavaClass:
         if class_name == self.java_class.name:
             return self.java_class
+        elif class_name == "java/io/PrintStream" and method_name == "println":
+            return JavaClass(json.loads('{"name": "Mock", "methods" :[{"name":"' + method_name + '", "code": { "bytecode": [ { "offset": 0, "opr": "load", "type": "str", "index": 0 }, { "offset": 1, "opr": "print" }, { "offset": 2, "opr": "return", "type": null } ] } } ] }'))
         else:
             return JavaClass(json.loads('{"name": "Mock", "methods" :[{"name":"' + method_name + '", "code": { "bytecode": [ { "offset": 0, "opr": "push", "value": { "type": "integer", "value": 4 } }, { "offset": 1, "opr": "return", "type": "int" } ] } } ] }'))
 
@@ -294,6 +296,11 @@ def peform_throw(runner: Interpreter, opr: Operation, element: StackElement):
     excpetion = runner.memory[exception_pointer]
     raise Exception(excpetion)
 
+def perform_print(runner: Interpreter, opr: Operation, element: StackElement):
+    value = element.operational_stack.pop().value
+    print(value, end="")
+    runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
+
 method_mapper = {
     "push": perform_push,
     "return": perform_return,
@@ -319,6 +326,7 @@ method_mapper = {
     "dup": perform_dup,
     "invoke": perform_invoke,
     "throw": peform_throw,
+    "print": perform_print,
 }
 
 def run_program(java_program: JavaProgram):

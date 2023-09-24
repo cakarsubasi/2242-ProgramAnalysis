@@ -5,30 +5,6 @@ from pydoc import locate
 import uuid
 import json
 
-"""
-noop
-push empty
-push value
-store
-load
-    ref
-    int
-newarray
-array_load
-dup
-binary
-    addition
-    subtraction
-    multiplication
-    division
-    modulo
-ifz
-    le
-    ne
-if
-    le
-"""
-
 @dataclass
 class IntValue:
     # Note that python ints are bigints

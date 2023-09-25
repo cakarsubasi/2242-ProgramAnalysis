@@ -6,26 +6,6 @@ import uuid
 import json
 
 @dataclass
-class IntValue:
-    # Note that python ints are bigints
-    # and you may wish to use ctypes
-    # for a more Java like int representation
-    value: int
-
-@dataclass
-class ShortValue:
-    value: int
-
-@dataclass
-class BoolValue:
-    value: bool
-
-@dataclass
-class ByteValue:
-    # TODO: use a better byte
-    value: int
-
-@dataclass
 class ArrayValue:
     length: int
     value: List[Any]
@@ -46,17 +26,52 @@ class ClassValue:
     fields: Dict[str, RefValue]
     # strictly speaking, we do not have to store the method information
 
-# JavaValue can be these things, but feel free to add more
-JavaValue = IntValue | BoolValue | ByteValue | ShortValue | RefValue | None
+class OutputBuffer:
+    buffer: str = ""
+    def push(self, str_or_bytes):
+        self.buffer += str_or_bytes 
 
 class Value:
-    def __init__(self, value: Any, type_name: str = None):
+    def __init__(self, value: Any, type_name: str = "void"):
+        if value.__class__ is Value:
+            raise Exception("Values shouldn't be nested!")
         self.value = value
         if type_name is None:
             self.type_name = type(value).__name__ 
         else:
             self.type_name = type_name
 
+    def _type_check(self, other: 'Value') -> Optional[str]:
+        return self.type_name
+
+    def __add__(self, other: 'Value'):
+        return Value(self.value + other.value, self.type_name)
+
+    def __sub__(self, other: 'Value'):
+        return Value(self.value - other.value, self.type_name)
+    
+    def __mul__(self, other: 'Value'):
+        return Value(self.value * other.value, self.type_name)
+    
+    def __div__(self, other: 'Value'):
+        return Value(self.value / other.value, self.type_name)
+    
+    def __eq__(self, other: 'Value'):
+        return self.value == other.value
+    
+    def __le__(self, other: 'Value'):
+        return self.value <= other.value
+    
+    def __gt__(self, other:'Value'):
+        return self.value > other.value
+    
+    def __str__(self):
+        return str(self.value)
+    
+    def __repr__(self):
+        return f"{self.type_name}:{repr(self.value)}"
+ 
+    
 class JavaError:
     # Need a way of propagating errors
     # Probably best to discuss how to implement this before deciding on one
@@ -101,10 +116,11 @@ class Operation:
 
 class Interpreter:
 
-    def __init__(self, java_class: JavaClass, method_name, method_args: List[Value], memory: Dict[str, JavaValue] = {}):
-        self.memory: Dict[str, JavaValue] = memory
+    def __init__(self, java_class: JavaClass, method_name, method_args: List[Value], memory: Dict[str, Value] = {}, stdout: OutputBuffer=OutputBuffer()):
+        self.memory: Dict[str, Value] = memory
         self.stack: List[StackElement] = [StackElement(method_args, [], Counter(method_name, 0))]
         self.java_class = java_class
+        self.stdout = stdout
 
     def get_class(self, class_name, method_name) -> JavaClass:
         if class_name == self.java_class.name:
@@ -121,6 +137,7 @@ class Interpreter:
             if operation.get_name() == "return":
                 return perform_return(self, operation, element)
             self.run_operation(operation, element)
+        raise Exception("Raised end without breaking")
 
     def run_operation(self, operation: Operation, element: StackElement):
         method = method_mapper[operation.get_name()]
@@ -130,8 +147,10 @@ class Interpreter:
 def perform_return(runner: Interpreter, opr: Operation, element: StackElement):
     type = opr.type
     if type == None:
-        return None
-    value = element.operational_stack.pop().value
+        return Value(None)
+    value = element.operational_stack.pop()
+    return value
+    return eval(f"{type}({value})")
     return locate(type)(value)
 
 def perform_push(runner: Interpreter, opr: Operation, element: StackElement):
@@ -143,20 +162,20 @@ def perform_load(runner: Interpreter, opr: Operation, element: StackElement):
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
 def perform_add(runner: Interpreter, opr: Operation, element: StackElement):
-    second = element.operational_stack.pop().value
-    first = element.operational_stack.pop().value
-    result = Value(first + second)
+    second = element.operational_stack.pop()
+    first = element.operational_stack.pop()
+    result = first + second
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
 
 def perform_sub(runner: Interpreter, opr: Operation, element: StackElement):
-    second = element.operational_stack.pop().value
-    first = element.operational_stack.pop().value
-    result = Value(first - second)
+    second = element.operational_stack.pop()
+    first = element.operational_stack.pop()
+    result = first - second
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
 
 def perform_strictly_less(runner: Interpreter, opr: Operation, element: StackElement):
-    second = element.operational_stack.pop().value
-    first = element.operational_stack.pop().value
+    second = element.operational_stack.pop()
+    first = element.operational_stack.pop()
     if first < second:
         next_counter = Counter(element.counter.method_name, opr.target)
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
@@ -164,8 +183,8 @@ def perform_strictly_less(runner: Interpreter, opr: Operation, element: StackEle
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
 def perform_less_or_equal(runner: Interpreter, opr: Operation, element: StackElement):
-    second = element.operational_stack.pop().value
-    first = element.operational_stack.pop().value
+    second = element.operational_stack.pop()
+    first = element.operational_stack.pop()
     if first <= second:
         next_counter = Counter(element.counter.method_name, opr.target)
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
@@ -174,8 +193,8 @@ def perform_less_or_equal(runner: Interpreter, opr: Operation, element: StackEle
 
 
 def perform_strictly_greater(runner: Interpreter, opr: Operation, element: StackElement):
-    second = element.operational_stack.pop().value
-    first = element.operational_stack.pop().value
+    second = element.operational_stack.pop()
+    first = element.operational_stack.pop()
     if first > second:
         next_counter = Counter(element.counter.method_name, opr.target)
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
@@ -183,8 +202,8 @@ def perform_strictly_greater(runner: Interpreter, opr: Operation, element: Stack
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
 def perform_greater_or_equal(runner: Interpreter, opr: Operation, element: StackElement):
-    second = element.operational_stack.pop().value
-    first = element.operational_stack.pop().value
+    second = element.operational_stack.pop()
+    first = element.operational_stack.pop()
     if first >= second:
         next_counter = Counter(element.counter.method_name, opr.target)
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
@@ -201,8 +220,8 @@ def perform_store(runner: Interpreter, opr: Operation, element: StackElement):
     runner.stack.append(StackElement(local_vars, element.operational_stack, element.counter.next_counter()))
 
 def perform_less_than_or_equal_zero(runner: Interpreter, opr: Operation, element: StackElement):
-    first = element.operational_stack.pop().value
-    second = 0
+    first = element.operational_stack.pop()
+    second = Value(0, 'integer')
     if first <= second:
         next_counter = Counter(element.counter.method_name, opr.target)
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
@@ -210,8 +229,8 @@ def perform_less_than_or_equal_zero(runner: Interpreter, opr: Operation, element
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
 def perform_not_equal_zero(runner: Interpreter, opr: Operation, element: StackElement):
-    first = element.operational_stack.pop().value
-    second = 0
+    first = element.operational_stack.pop()
+    second = Value(0, 'integer')
     if first != second:
         next_counter = Counter(element.counter.method_name, opr.target)
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
@@ -225,9 +244,9 @@ def perform_increment(runner: Interpreter, opr: Operation, element: StackElement
     runner.stack.append(StackElement(local_vars, element.operational_stack, element.counter.next_counter()))
 
 def perform_multiplication(runner: Interpreter, opr: Operation, element: StackElement):
-    second = element.operational_stack.pop().value
-    first = element.operational_stack.pop().value
-    result = Value(first * second)
+    second = element.operational_stack.pop()
+    first = element.operational_stack.pop()
+    result = first * second
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
 
 def perform_goto(runner: Interpreter, opr: Operation, element: StackElement):
@@ -285,19 +304,20 @@ def perform_invoke(runner: Interpreter, opr: Operation, element: StackElement):
     for _ in range(len(opr.method["args"])):
         args.append(element.operational_stack.pop().value)
     args.reverse()
-    result = run_method(runner.get_class(class_name, method_name), method_name, args, runner.memory)
+    result = run_method(runner.get_class(class_name, method_name), method_name, args, runner.memory, runner.stdout)
     if opr.method["returns"] is not None:
-        runner.stack.append(StackElement(element.local_variables, element.operational_stack + [Value(result)], element.counter.next_counter()))
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
     else:
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
 def peform_throw(runner: Interpreter, opr: Operation, element: StackElement):
     exception_pointer = element.operational_stack.pop().value
-    excpetion = runner.memory[exception_pointer]
-    raise Exception(excpetion)
+    exception = runner.memory[exception_pointer]
+    raise Exception(exception)
 
 def perform_print(runner: Interpreter, opr: Operation, element: StackElement):
-    value = element.operational_stack.pop().value
+    value = element.operational_stack.pop()
+    runner.stdout.push(str(value))
     print(value, end="")
     runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
@@ -333,13 +353,21 @@ def run_program(java_program: JavaProgram):
     # Ignore this for now
     raise NotImplementedError
 
-def run_method(java_class: JavaClass, method_name: str, method_args: List[JavaValue], environment: Optional[JavaProgram]=None) -> JavaValue | JavaError:
+def wrap(arr: List[Any]) -> List[Value]:
+    return [Value(x) if x is not Value | List else x for x in arr]
+
+def run_method(java_class: JavaClass, 
+               method_name: str, 
+               method_args: List[Any],  
+               environment: Optional[Dict[Any, Any]]=None, 
+               stdout: OutputBuffer=OutputBuffer()) -> Value:
     # This is the entry point, this function should create an
     # Interpreter instance, and then run it with the given
     # properties. It should raise an error
     # if it gets unexpected or inadequate arguments
 
     # The environment should allow referencing other classes
+    #method_args = wrap(method_args)
 
     args = []
     memory = {}
@@ -352,5 +380,5 @@ def run_method(java_class: JavaClass, method_name: str, method_args: List[JavaVa
         else:
             args.append(Value(arg, type_name))
 
-    interpreter = Interpreter(java_class, method_name, args, memory)
+    interpreter = Interpreter(java_class, method_name, args, memory, stdout)
     return interpreter.run()

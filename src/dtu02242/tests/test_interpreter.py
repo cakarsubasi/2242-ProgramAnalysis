@@ -1,5 +1,5 @@
-from dtu02242.interpreter.interpreter import run_method, RefValue, ArrayValue, JavaError, OutputBuffer, Value
-from dtu02242.interpreter.parser import JavaClass
+from dtu02242.week_05.interpreter import run_method, RefValue, ArrayValue, JavaError, OutputBuffer, Value
+from dtu02242.week_05.parser import JavaClass
 from typing import List, Any
 import json
 import pytest

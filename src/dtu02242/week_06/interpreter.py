@@ -7,19 +7,6 @@ from .bytecode import ByteCode, StackElement, Counter, Operation
 import uuid
 import json
 
-def perform_invoke(runner: IInterp, opr: Operation, element: StackElement):
-    method_name = opr.method["name"]
-    class_name = opr.method["ref"]["name"]
-    args = []
-    for _ in range(len(opr.method["args"])):
-        args.append(element.operational_stack.pop())
-    args.reverse()
-    result = run_method(runner.get_class(class_name, method_name), method_name, args, runner.memory, runner.stdout)
-    if opr.method["returns"] is not None:
-        runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
-    else:
-        runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
-
 StackFrame = List[StackElement]
 
 class Interpreter(IInterp):
@@ -37,6 +24,8 @@ class Interpreter(IInterp):
                  stdout: OutputBuffer=OutputBuffer()):
         self.memory = memory
         self.stack: List[StackElement] = []
+        self.stack_of_stacks.append(self.stack)
+
         if type(java_program) is JavaProgram:
             self.java_program = java_program
         elif type(java_program) is JavaClass:
@@ -71,11 +60,30 @@ class Interpreter(IInterp):
 
         match operation_name:
             case "invoke":
-                return perform_invoke(self, operation, element)
+                self.create_stack_frame(operation, element)
             case "return":
                 return self.bytecode_interpreter.execute(operation_name, self, operation, element)
             case _:
                 self.bytecode_interpreter.execute(operation_name, self, operation, element)
+
+    def create_stack_frame(self, opr, element):
+        method_name = opr.method["name"]
+        class_name = opr.method["ref"]["name"]
+        args = []
+        for _ in range(len(opr.method["args"])):
+            args.append(element.operational_stack.pop())
+        args.reverse()
+        self.stack_of_stacks.append([])
+        self.stack = self.stack_of_stacks[-1]
+        self.stack.append(StackElement(args, [], Counter(method_name, 0)))
+        result = self.run(class_name, method_name, args)
+
+        self.stack_of_stacks.pop()
+        self.stack = self.stack_of_stacks[-1]
+        if opr.method["returns"] is not None:
+            self.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
+        else:
+            self.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
 def run_program(java_program: JavaProgram):
     # Ignore this for now

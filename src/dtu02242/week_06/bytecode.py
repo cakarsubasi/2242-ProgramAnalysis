@@ -74,6 +74,9 @@ class ByteCode:
     "throw": self.peform_throw,
     "print": self.perform_print,
 }
+        
+    def execute(self, instruction: str, runner: IInterp, opr: Operation, element: StackElement):
+        return self.method_mapper[instruction](runner, opr, element)
 
     def perform_return(self, runner: IInterp, opr: Operation, element: StackElement):
         type = opr.type

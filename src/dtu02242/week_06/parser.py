@@ -5,6 +5,9 @@ from glob import glob
 JsonDict = Dict[str, Any]
 
 class JavaClass:
+    name: str
+    json_dict: JsonDict
+
     def __init__(self, json_dict: JsonDict) -> None:
         self.name = json_dict['name']
         self.json_dict = json_dict
@@ -22,13 +25,22 @@ class JavaClass:
     
     def __str__(self) -> str:
         return self.json_dict["name"]
+    
+    def __repr__(self) -> str:
+        return f"{self.name}"
 
 class JavaProgram:
-    def __init__(self, java_classes: Iterable[JavaClass], entry_point: Optional[str]) -> None:
-        pass
+    _java_classes: Dict[str, JavaClass]
 
-    def get_class(self, class_name: str) -> JavaClass:
-        raise NotImplementedError
+    def __init__(self, java_classes: Iterable[JavaClass], entry_point: Optional[str]=None) -> None:
+        self._java_classes = {str(java_class): java_class for java_class in java_classes}
+        self._entry_point = entry_point
+
+    def get_class(self, class_name: str) -> JavaClass | None:
+        return self._java_classes.get(class_name)
+    
+    def __str__(self) -> str:
+        return str(self._java_classes)
 
 def find_files_by_type(root_dir: Path, file_type: str) -> List[str]:
     '''Get the str path of all files in a given root directory of a given file type'''

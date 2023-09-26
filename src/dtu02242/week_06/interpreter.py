@@ -1,81 +1,10 @@
 from typing import Dict, List, Any, Optional
-from dataclasses import dataclass
+
+from dtu02242.week_06.data_structures import ArrayValue, OutputBuffer, Value
 from .parser import JavaClass, JavaProgram
 from pydoc import locate
 import uuid
 import json
-
-@dataclass
-class ArrayValue:
-    length: int
-    value: List[Any]
-
-@dataclass
-class RefValue:
-    # refvalue should contain a pointer
-    # to another structure
-    value: Any 
-    # Also keep in mind that to emulate Java
-    # behavior, we need reference counting
-    # semantics but right now it is likely
-    # simpler to just leak all memory
-
-@dataclass
-class ClassValue:
-    class_name: str
-    fields: Dict[str, RefValue]
-    # strictly speaking, we do not have to store the method information
-
-class OutputBuffer:
-    buffer: str = ""
-    def push(self, str_or_bytes):
-        self.buffer += str_or_bytes 
-
-class Value:
-    def __init__(self, value: Any, type_name: str = "void"):
-        if value.__class__ is Value:
-            raise Exception("Values shouldn't be nested!")
-        self.value = value
-        if type_name is None:
-            self.type_name = type(value).__name__ 
-        else:
-            self.type_name = type_name
-
-    def _type_check(self, other: 'Value') -> Optional[str]:
-        return self.type_name
-
-    def __add__(self, other: 'Value'):
-        return Value(self.value + other.value, self.type_name)
-
-    def __sub__(self, other: 'Value'):
-        return Value(self.value - other.value, self.type_name)
-    
-    def __mul__(self, other: 'Value'):
-        return Value(self.value * other.value, self.type_name)
-    
-    def __div__(self, other: 'Value'):
-        return Value(self.value / other.value, self.type_name)
-    
-    def __eq__(self, other: 'Value'):
-        return self.value == other.value
-    
-    def __le__(self, other: 'Value'):
-        return self.value <= other.value
-    
-    def __gt__(self, other:'Value'):
-        return self.value > other.value
-    
-    def __str__(self):
-        return str(self.value)
-    
-    def __repr__(self):
-        return f"{self.type_name}:{repr(self.value)}"
- 
-    
-class JavaError:
-    # Need a way of propagating errors
-    # Probably best to discuss how to implement this before deciding on one
-    pass
 
 class Counter:
 
@@ -239,8 +168,8 @@ def perform_not_equal_zero(runner: Interpreter, opr: Operation, element: StackEl
 
 def perform_increment(runner: Interpreter, opr: Operation, element: StackElement):
     local_vars = [x for x in element.local_variables]
-    value = element.local_variables[opr.index].value
-    local_vars[opr.index] = Value(value + opr.amount)
+    value = element.local_variables[opr.index]
+    local_vars[opr.index] = value + Value(opr.amount)
     runner.stack.append(StackElement(local_vars, element.operational_stack, element.counter.next_counter()))
 
 def perform_multiplication(runner: Interpreter, opr: Operation, element: StackElement):
@@ -254,26 +183,26 @@ def perform_goto(runner: Interpreter, opr: Operation, element: StackElement):
     runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
 
 def perform_new_array(runner: Interpreter, opr: Operation, element: StackElement):
-    size = element.operational_stack.pop().value
+    size = element.operational_stack.pop().get_value()
     memory_address = uuid.uuid4()
-    runner.memory[memory_address] = ArrayValue(size, [0] * size)
+    runner.memory[memory_address] = ArrayValue(size, Value(0))
     value = Value(memory_address)
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
 def perform_array_store(runner: Interpreter, opr: Operation, element: StackElement):
-    value_to_store = element.operational_stack.pop().value
-    index = element.operational_stack.pop().value
-    arr_address = element.operational_stack.pop().value
-    runner.memory[arr_address].value[index] = value_to_store
+    value_to_store = element.operational_stack.pop()
+    index = element.operational_stack.pop().get_value()
+    arr_address = element.operational_stack.pop().get_value()
+    runner.memory[arr_address][index] = value_to_store
     runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
 def perform_array_load(runner: Interpreter, opr: Operation, element: StackElement):
-    index = element.operational_stack.pop().value
-    arr_address = element.operational_stack.pop().value
-    arr = runner.memory[arr_address]
-    if arr.length <= index:
+    index = element.operational_stack.pop().get_value()
+    arr_address = element.operational_stack.pop().get_value()
+    arr: ArrayValue = runner.memory[arr_address]
+    if arr.get_length() <= index:
         raise Exception("Index out of bounds")
-    value = Value(arr.value[index])
+    value = arr[index]
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
 def perform_get(runner: Interpreter, opr: Operation, element: StackElement):
@@ -282,8 +211,8 @@ def perform_get(runner: Interpreter, opr: Operation, element: StackElement):
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [Value(0)], element.counter.next_counter()))
 
 def perform_array_length(runner: Interpreter, opr: Operation, element: StackElement):
-    arr_address = element.operational_stack.pop().value
-    arr_length = runner.memory[arr_address].length
+    arr_address = element.operational_stack.pop().get_value()
+    arr_length = runner.memory[arr_address].get_length()
     value = Value(arr_length)
     runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
@@ -302,7 +231,7 @@ def perform_invoke(runner: Interpreter, opr: Operation, element: StackElement):
     class_name = opr.method["ref"]["name"]
     args = []
     for _ in range(len(opr.method["args"])):
-        args.append(element.operational_stack.pop().value)
+        args.append(element.operational_stack.pop())
     args.reverse()
     result = run_method(runner.get_class(class_name, method_name), method_name, args, runner.memory, runner.stdout)
     if opr.method["returns"] is not None:
@@ -311,8 +240,8 @@ def perform_invoke(runner: Interpreter, opr: Operation, element: StackElement):
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
 def peform_throw(runner: Interpreter, opr: Operation, element: StackElement):
-    exception_pointer = element.operational_stack.pop().value
-    exception = runner.memory[exception_pointer]
+    exception_pointer = element.operational_stack.pop()
+    exception = runner.memory[exception_pointer.get_value()]
     raise Exception(exception)
 
 def perform_print(runner: Interpreter, opr: Operation, element: StackElement):
@@ -353,12 +282,9 @@ def run_program(java_program: JavaProgram):
     # Ignore this for now
     raise NotImplementedError
 
-def wrap(arr: List[Any]) -> List[Value]:
-    return [Value(x) if x is not Value | List else x for x in arr]
-
 def run_method(java_class: JavaClass, 
                method_name: str, 
-               method_args: List[Any],  
+               method_args: List[Value],  
                environment: Optional[Dict[Any, Any]]=None, 
                stdout: OutputBuffer=OutputBuffer()) -> Value:
     # This is the entry point, this function should create an
@@ -372,13 +298,13 @@ def run_method(java_class: JavaClass,
     args = []
     memory = {}
     for arg in method_args:
-        type_name = type(arg).__name__
-        if type_name == "list":
+        #type_name = type(arg).__name__
+        if arg.__class__ is ArrayValue:
             memory_address = uuid.uuid4()
-            memory[memory_address] = ArrayValue(len(arg), arg)
+            memory[memory_address] = arg # ArrayValue(arg)
             args.append(Value(memory_address))
         else:
-            args.append(Value(arg, type_name))
+            args.append(arg)
 
     interpreter = Interpreter(java_class, method_name, args, memory, stdout)
     return interpreter.run()

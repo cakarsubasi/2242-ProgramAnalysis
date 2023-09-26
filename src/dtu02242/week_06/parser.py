@@ -13,12 +13,12 @@ class JavaClass:
         methods: List[JsonDict] = self.json_dict["methods"]
         return methods
     
-    def get_method(self, name: str) -> Optional[JsonDict]:
+    def get_method(self, name: str) -> JsonDict:
         methods = self.get_methods()
         for method in methods:
             if method["name"] == name:
                 return method
-        return None
+        raise Exception("Method {name} not found in {self}")
     
     def __str__(self) -> str:
         return self.json_dict["name"]

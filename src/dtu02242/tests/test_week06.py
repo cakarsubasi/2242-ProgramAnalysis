@@ -1,5 +1,5 @@
-from dtu02242.week_06.data_structures import ArrayValue, JavaError, OutputBuffer, RefValue, Value, wrap
-from dtu02242.week_06.interpreter import run_method
+from dtu02242.week_06.data_structures import *
+from dtu02242.week_06.interpreter import run_method, run_method_analysis
 from dtu02242.week_06.parser import JavaClass
 from typing import List, Any
 import json
@@ -134,5 +134,110 @@ class TestCalls:
         assert run_method(self.java_class, "fib", wrap([5])).get_value() == 8
         assert run_method(self.java_class, "fib", wrap([6])).get_value() == 13
         # after this point, the method should be so slow that it is a waste of time to test
-        
-        
+
+
+class TestArithmetics:
+    """
+    Mostly analyzes division by zero
+    """
+    with open("course-02242-examples/decompiled/eu/bogoe/dtu/exceptional/Arithmetics.json", "r") as fp:
+        json_dict = json.load(fp)
+        java_class = JavaClass(json_dict=json_dict)
+    common_ex = "InvalidOperationError"
+
+    def test_alwaysThrows1(self):
+        # No arguments
+        # Always throws InvalidOperationException
+        result = run_method_analysis(self.java_class, "alwaysThrows1")
+        expected = AnalysisResult(NeverReturn())
+        expected.errors.append(AnalysisError(self.common_ex, Assumption(), None))
+        assert result == expected
+
+    def test_alwaysThrows2(self):
+        # 1 argument
+        # Always throws InvalidOperationException regardless of argument
+        result = run_method_analysis(self.java_class, "alwaysThrows2")
+        expected = AnalysisResult(NeverReturn())
+        expected.errors.append(AnalysisError(self.common_ex, Assumption(), None))
+        assert result == expected
+
+    def test_alwaysThrows3(self):
+        # 2 arguments
+        # Throws invalid operation exception if and only if argument 2 is zero
+        result = run_method_analysis(self.java_class, "alwaysThrows3")
+        expected = AnalysisResult(MaybeReturn())
+        assumption = Assumption() # assumption that argument2 is zero
+        expected.errors.append(AnalysisError(self.common_ex, assumption, None))
+        assert result == expected
+
+    def test_alwaysThrows4(self):
+        # 2 arguments
+        # throws AssertionError if argument 1 above -1 and argument 2 above 1
+        # throws InvalidOperationException if argument 2 is zero
+        result = run_method_analysis(self.java_class, "alwaysThrows3")
+        expected = AnalysisResult(MaybeReturn())
+        assumption = Assumption() # Maybe need to combine assumptions
+        expected.errors.append(AnalysisError(self.common_ex, assumption, None))
+        assert result == expected
+
+    def test_alwaysThrows5(self):
+        # 2 arguments
+        # throws AssertionError if argument 1 above -1 and argument 2 above 1
+        # throws InvalidOperationException if argument 2 is zero
+        pass
+
+    def test_itDependsOnLattice1(self):
+        # No arguments
+        # doesn't throw, always returns 1
+        pass
+
+    def test_itDependsOnLattice2(self):
+        # No arguments
+        # doesn't throw, always returns -1
+        pass
+
+    def test_itDependsOnLattice3(self):
+        # 2 arguments
+        # throws AssertionError if arg1 <= 1000 or arg2 <= 10
+        # specifically throws InvalidOperationException if arg1 is 10 times arg2 (difficult to catch)
+        pass
+
+    def test_itDependsOnLattice4(self):
+        # No arguments
+        # Always throws InvalidOperationException
+        pass
+
+    def test_neverThrows1(self):
+        # No arguments
+        # Never throws, returns 0
+        pass
+
+    def test_neverThrows2(self):
+        # 1 argument
+        # throws AssertionError if arg1 <= 0
+        # Never throws, returns 0
+        pass
+
+    def test_neverThrows3(self):
+        # 2 argument
+        # throws AssertionError if arg1 <= 0
+        # throws AssertionError if arg2 != 0
+        # Never throws, returns 0
+        pass
+
+    def test_neverThrows4(self):
+        # 2 argument
+        # throws AssertionError if arg1 <= 0
+        # throws AssertionError if arg2 >= 0
+        # Never throws, returns 0
+        pass
+
+    def test_neverThrows5(self):
+        # 2 argument
+        # Never throws, returns same sign as arg2
+        pass
+
+    def test_speedVsPrecision(self):
+        # No args
+        # throws InvalidOperationException but takes a while to get there
+        pass

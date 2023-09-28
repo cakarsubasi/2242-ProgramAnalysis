@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 def wrap(arr: List[Any]) -> List['Value']:
     """
@@ -13,11 +13,13 @@ def wrap(arr: List[Any]) -> List['Value']:
             output.append(Value(elem))
     return output
 
-def must_be_value(value_maybe: Any):
+def _must_be_value(value_maybe: Any):
     if not value_maybe.__class__ is Value:
         raise Exception(f"{value_maybe} must be value!")
 
 class Value:
+    value: Any
+    type_name: str
     def __init__(self, value: Any, type_name: str = "void"):
         if type(value) is Value:
             raise Exception("Values shouldn't be nested!")
@@ -109,8 +111,85 @@ class ArrayValue(Value):
         return self._value.__getitem__(__idx)
     
     def __setitem__(self, __idx, __value: Value):
-        must_be_value(__value)
+        _must_be_value(__value)
         self._value.__setitem__(__idx, __value)
 
     def get_length(self):
         return self._capacity
+
+
+# TODO: Write Abstractions here
+
+class Range:
+    pass
+    # Gotta figure out a good range abstraction
+
+@dataclass
+class NeverReturn:
+    pass
+    # We need a way to indicate that a function is divergent
+    # (ie never returns)
+    def __eq__(self, __value: object) -> bool:
+        return type(self) is type(__value)
+
+@dataclass
+class MaybeReturn:
+    pass
+    def __eq__(self, __value: object) -> bool:
+        return type(self) is type(__value)
+
+class Assumption:
+    # An assumption should be a constraint, indicating either
+    # working constraints (assertions or otherwise) or
+    # conditions required for a certain event to happen
+    def __init__(self) -> None:
+        raise NotImplementedError()
+
+    def __eq__(self, __value: object) -> bool:
+        raise NotImplementedError()
+
+@dataclass   
+class AnalysisError:
+    name: str
+    constraint: Assumption
+    cause: Optional[str]
+
+    def __eq__(self, __value: 'AnalysisError') -> bool:
+        if type(__value) is not AnalysisError:
+            return False
+        return self.name == __value.name
+    
+    def __hash__(self) -> int:
+        # this treats every type of error as one instance
+        # which is generally not what you want
+        return self.name.__hash__()
+
+# Errors should be in the format:
+# error_name, constraint(s?), cause (maybe drop this for now)
+
+class AnalysisResult(Value):
+    errors: List[AnalysisError]
+    # Asserts always give the same error so, we only carry the assumption
+    asserts: List[Assumption]
+    def __init__(self, return_value: Any , type_name: str = "analysis_result"):
+        super().__init__(return_value, type_name)
+        errors = []
+        asserts = []
+        # TODO
+
+    def __eq__(self, other: 'Value'):
+        if type(other) is Value:
+            return super().__eq__(other) and len(self.errors) == 0
+        elif type(other) is AnalysisResult:
+            same_return = self.value == other.value
+            # this treats every type of one error as unique
+            # we may probably wish to change this later on
+            same_errors = set(self.errors) == set(other.errors)
+            # might also want to compare assumptions
+            return same_return and same_errors
+            
+        else:
+            return False 
+        
+    
+

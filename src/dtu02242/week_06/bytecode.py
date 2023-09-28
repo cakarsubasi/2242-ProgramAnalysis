@@ -246,3 +246,11 @@ class ByteCode:
         runner.stdout.push(str(value))
         print(value, end="")
         runner.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
+
+class ByteCodeAbstraction(ByteCode):
+    # Add fields here to record state
+    def __init__(self):
+        super().__init__()
+
+    # Override methods here to alter program behavior
+    

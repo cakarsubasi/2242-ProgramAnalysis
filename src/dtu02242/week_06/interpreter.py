@@ -1,7 +1,7 @@
 from typing import Dict, List, Any, Optional
 
 from dtu02242.week_06.data_structures import ArrayValue, OutputBuffer, Value
-from .parser import JavaClass, JavaProgram
+from .parser import JavaClass, JavaProgram, JsonDict
 from .bytecode import IInterp
 from .bytecode import ByteCode, StackElement, Counter, Operation
 import uuid
@@ -12,14 +12,14 @@ StackFrame = List[StackElement]
 class Interpreter(IInterp):
     java_program: JavaProgram
     bytecode_interpreter: ByteCode
-    memory: Dict[str, Value]
+    memory: Dict[uuid.UUID, Value]
     stack_of_stacks: List[StackFrame] = []
-    memory: Dict[str, Value] = {}
+    memory: Dict[uuid.UUID, Value] = {}
     stdout: OutputBuffer
 
     def __init__(self, 
                  java_program: JavaProgram | JavaClass, 
-                 memory: Dict[str, Value] = {},
+                 memory: Dict[uuid.UUID, Value] = {},
                  bytecode_interpreter = ByteCode(),
                  stdout: OutputBuffer=OutputBuffer()):
         self.memory = memory
@@ -78,6 +78,8 @@ class Interpreter(IInterp):
         self.stack.append(StackElement(args, [], Counter(method_name, 0)))
         result = self.run(class_name, method_name, args)
 
+        # Note that this currently allows memory mutation
+        
         self.stack_of_stacks.pop()
         self.stack = self.stack_of_stacks[-1]
         if opr.method["returns"] is not None:
@@ -85,9 +87,23 @@ class Interpreter(IInterp):
         else:
             self.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
 
-def run_program(java_program: JavaProgram):
+def generate_unbounded_params(java_method: JsonDict) -> List[Value]:
+    """
+    Now, we will be creating parameters to pass the function
+    Feel free to change the signature
+    """
+    raise NotImplementedError()
+
+def run_program_analysis(java_program: JavaProgram):
     # Ignore this for now
     raise NotImplementedError
+
+def run_method_analysis(java_class: JavaClass,
+                        method_name: str,
+                        stdout:OutputBuffer=OutputBuffer()):
+    
+    pass
+
 
 def run_method(java_class: JavaClass, 
                method_name: str, 

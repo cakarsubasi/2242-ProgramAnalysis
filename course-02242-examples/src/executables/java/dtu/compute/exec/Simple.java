@@ -37,6 +37,12 @@ public class Simple {
     }
 
     @Case
+    public static int div(int a, int b) {
+        assert b != 0;
+        return a / b;
+    }
+
+    @Case
     public static int factorial(int n) {
         int m = 1;
         while (n > 0) {

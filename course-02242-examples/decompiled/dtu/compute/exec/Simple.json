@@ -12,7 +12,22 @@
     "annotations": []
   },
   "interfaces": [],
-  "fields": [],
+  "fields": [
+    {
+      "name": "$assertionsDisabled",
+      "access": [
+        "static",
+        "final",
+        "synthetic"
+      ],
+      "type": {
+        "base": "boolean",
+        "annotations": []
+      },
+      "value": null,
+      "annotations": []
+    }
+  ],
   "methods": [
     {
       "name": "<init>",
@@ -391,6 +406,140 @@
           },
           {
             "offset": 8,
+            "opr": "return",
+            "type": "int"
+          }
+        ]
+      },
+      "annotations": [
+        {
+          "type": "dtu/compute/exec/Case",
+          "is_runtime_visible": false,
+          "values": {}
+        }
+      ],
+      "exceptions": [],
+      "default": null
+    },
+    {
+      "name": "div",
+      "access": [
+        "public",
+        "static"
+      ],
+      "typeparams": [],
+      "params": [
+        {
+          "visible": true,
+          "type": {
+            "base": "int",
+            "annotations": []
+          },
+          "annotations": []
+        },
+        {
+          "visible": true,
+          "type": {
+            "base": "int",
+            "annotations": []
+          },
+          "annotations": []
+        }
+      ],
+      "returns": {
+        "type": {
+          "base": "int"
+        },
+        "annotations": []
+      },
+      "code": {
+        "max_stack": 2,
+        "max_locals": 2,
+        "exceptions": [],
+        "stack_map": [
+          {
+            "index": 8,
+            "type": "same"
+          }
+        ],
+        "bytecode": [
+          {
+            "offset": 0,
+            "opr": "get",
+            "static": true,
+            "field": {
+              "class": "dtu/compute/exec/Simple",
+              "name": "$assertionsDisabled",
+              "type": "boolean"
+            }
+          },
+          {
+            "offset": 3,
+            "opr": "ifz",
+            "condition": "ne",
+            "target": 8
+          },
+          {
+            "offset": 6,
+            "opr": "load",
+            "type": "int",
+            "index": 1
+          },
+          {
+            "offset": 7,
+            "opr": "ifz",
+            "condition": "ne",
+            "target": 8
+          },
+          {
+            "offset": 10,
+            "opr": "new",
+            "class": "java/lang/AssertionError"
+          },
+          {
+            "offset": 13,
+            "opr": "dup",
+            "words": 1
+          },
+          {
+            "offset": 14,
+            "opr": "invoke",
+            "access": "special",
+            "method": {
+              "is_interface": false,
+              "ref": {
+                "kind": "class",
+                "name": "java/lang/AssertionError"
+              },
+              "name": "<init>",
+              "args": [],
+              "returns": null
+            }
+          },
+          {
+            "offset": 17,
+            "opr": "throw"
+          },
+          {
+            "offset": 18,
+            "opr": "load",
+            "type": "int",
+            "index": 0
+          },
+          {
+            "offset": 19,
+            "opr": "load",
+            "type": "int",
+            "index": 1
+          },
+          {
+            "offset": 20,
+            "opr": "binary",
+            "type": "int",
+            "operant": "div"
+          },
+          {
+            "offset": 21,
             "opr": "return",
             "type": "int"
           }
@@ -1443,6 +1592,108 @@
           },
           {
             "offset": 180,
+            "opr": "return",
+            "type": null
+          }
+        ]
+      },
+      "annotations": [],
+      "exceptions": [],
+      "default": null
+    },
+    {
+      "name": "<clinit>",
+      "access": [
+        "static"
+      ],
+      "typeparams": [],
+      "params": [],
+      "returns": {
+        "type": null,
+        "annotations": []
+      },
+      "code": {
+        "max_stack": 1,
+        "max_locals": 0,
+        "exceptions": [],
+        "stack_map": [
+          {
+            "index": 5,
+            "type": "same"
+          },
+          {
+            "index": 6,
+            "type": "same_locals_1_stack_item_frame",
+            "info": {
+              "type": "integer"
+            }
+          }
+        ],
+        "bytecode": [
+          {
+            "offset": 0,
+            "opr": "push",
+            "value": {
+              "type": "class",
+              "value": {
+                "kind": "class",
+                "name": "dtu/compute/exec/Simple"
+              }
+            }
+          },
+          {
+            "offset": 2,
+            "opr": "invoke",
+            "access": "virtual",
+            "method": {
+              "ref": {
+                "kind": "class",
+                "name": "java/lang/Class"
+              },
+              "name": "desiredAssertionStatus",
+              "args": [],
+              "returns": "boolean"
+            }
+          },
+          {
+            "offset": 5,
+            "opr": "ifz",
+            "condition": "ne",
+            "target": 5
+          },
+          {
+            "offset": 8,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 1
+            }
+          },
+          {
+            "offset": 9,
+            "opr": "goto",
+            "target": 6
+          },
+          {
+            "offset": 12,
+            "opr": "push",
+            "value": {
+              "type": "integer",
+              "value": 0
+            }
+          },
+          {
+            "offset": 13,
+            "opr": "put",
+            "static": true,
+            "field": {
+              "class": "dtu/compute/exec/Simple",
+              "name": "$assertionsDisabled",
+              "type": "boolean"
+            }
+          },
+          {
+            "offset": 16,
             "opr": "return",
             "type": null
           }

@@ -9,9 +9,9 @@ class Range:
     from_: int
     to: int
 
-    def __init__(self, from_: int, to: int):
-        self.from_ = from_
-        self.to = to
+    def __init__(self, a: int, b: int):
+        self.from_ = min(a, b)
+        self.to = max(a, b)
 
 class RangeValue(Value):
     type_name = "range_list"
@@ -48,7 +48,21 @@ class RangeValue(Value):
         result = []
         for left_range in self._value:
             for right_range in other._value:
-                result.append(Range(left_range.from_ - right_range.to, left_range.to - right_range.from_))
+                result_from = left_range.from_ - right_range.to
+                result_to = left_range.to - right_range.from_
+                
+                if result_from < INT_MINIMUM and result_to < INT_MINIMUM:
+                    underflow_from = INT_MAXIMUM - (result_from - INT_MINIMUM - 1)
+                    underflow_to = INT_MAXIMUM - (result_to - INT_MINIMUM - 1)
+                    result.append(Range(underflow_from, underflow_to))
+                elif result_from < INT_MINIMUM:
+                    underflow = INT_MAXIMUM - (result_from - INT_MINIMUM - 1)
+                    result.append(Range(underflow, result_to))
+                elif result_to < INT_MINIMUM:
+                    underflow = INT_MAXIMUM - (result_to - INT_MINIMUM - 1)
+                    result.append(Range(result_from, underflow))
+                else:  
+                    result.append(Range(result_from, result_to))
 
         return RangeValue(result, self.type_name)
 

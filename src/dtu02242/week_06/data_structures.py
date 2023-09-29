@@ -143,10 +143,10 @@ class Assumption:
     # working constraints (assertions or otherwise) or
     # conditions required for a certain event to happen
     def __init__(self) -> None:
-        raise NotImplementedError()
+        pass
 
     def __eq__(self, __value: object) -> bool:
-        raise NotImplementedError()
+        return True
 
 @dataclass   
 class AnalysisError:
@@ -168,13 +168,11 @@ class AnalysisError:
 # error_name, constraint(s?), cause (maybe drop this for now)
 
 class AnalysisResult(Value):
-    errors: List[AnalysisError]
-    # Asserts always give the same error so, we only carry the assumption
-    asserts: List[Assumption]
     def __init__(self, return_value: Any , type_name: str = "analysis_result"):
         super().__init__(return_value, type_name)
-        errors = []
-        asserts = []
+        self.errors: List[AnalysisError] = []
+        # Asserts always give the same error so, we only carry the assumption
+        self.asserts: List[Assumption] = []
         # TODO
 
     def __eq__(self, other: 'Value'):

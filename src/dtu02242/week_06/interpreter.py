@@ -1,6 +1,7 @@
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Tuple, Optional
 
-from dtu02242.week_06.data_structures import ArrayValue, OutputBuffer, Value
+from .range_abstraction import RangeAbstraction, RangeValue
+from .data_structures import ArrayValue, OutputBuffer, Value, AnalysisException
 from .parser import JavaClass, JavaProgram, JsonDict
 from .bytecode import IInterp
 from .bytecode import ByteCode, StackElement, Counter, Operation
@@ -16,6 +17,7 @@ class Interpreter(IInterp):
     stack_of_stacks: List[StackFrame] = []
     memory: Dict[uuid.UUID, Value] = {}
     stdout: OutputBuffer
+    exceptions: List[AnalysisException] 
 
     def __init__(self, 
                  java_program: JavaProgram | JavaClass, 
@@ -25,6 +27,7 @@ class Interpreter(IInterp):
         self.memory = memory
         self.stack: List[StackElement] = []
         self.stack_of_stacks.append(self.stack)
+        self.exceptions = []
 
         if type(java_program) is JavaProgram:
             self.java_program = java_program
@@ -49,7 +52,7 @@ class Interpreter(IInterp):
 
         while len(self.stack) > 0:
             element = self.stack.pop()
-            operation = Operation(self.get_class(class_name, method_name).get_method(element.counter.method_name)["code"]["bytecode"][element.counter.counter])
+            operation = Operation(self.get_class(class_name, method_name).get_method(element.counter.method_name)["code"]["bytecode"][element.counter.counter], self.bytecode_interpreter.create_value)
             result = self.run_operation(operation, element)
             if operation.get_name() == "return":
                 return result
@@ -86,6 +89,26 @@ class Interpreter(IInterp):
             self.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
         else:
             self.stack.append(StackElement(element.local_variables, element.operational_stack, element.counter.next_counter()))
+    
+    def run_analysis(self, class_name: str, method_name: str, method_args: List[Value]) -> Value:
+        self.stack.append(StackElement(method_args, [], Counter(method_name, 0)))
+
+        k = 100
+        for _ in range(k):
+            element = self.stack.pop()
+            operation = Operation(self.get_class(class_name, method_name).get_method(element.counter.method_name)["code"]["bytecode"][element.counter.counter], self.bytecode_interpreter.create_value)
+            result = self.run_analysis_operation(operation, element)
+            if len(self.exceptions) > 0:
+                return self.exceptions[0]
+            if operation.get_name() == "return":
+                return result
+    
+    def run_analysis_operation(self, operation: Operation, element: StackElement) -> Value | None:
+        operation_name = operation.get_name()
+
+        if operation_name == "return":
+            return self.bytecode_interpreter.execute(operation_name, self, operation, element)
+        self.bytecode_interpreter.execute(operation_name, self, operation, element)
 
 def generate_unbounded_params(java_method: JsonDict) -> List[Value]:
     """
@@ -100,9 +123,20 @@ def run_program_analysis(java_program: JavaProgram):
 
 def run_method_analysis(java_class: JavaClass,
                         method_name: str,
-                        stdout:OutputBuffer=OutputBuffer()):
+                        stdout:OutputBuffer=OutputBuffer()) -> Tuple[bool, Optional[AnalysisException]]:
+    args = []
+    memory = {}
+    abstraction = RangeAbstraction()
+    interpreter = Interpreter(java_program=java_class, 
+                              memory=memory,
+                              bytecode_interpreter=abstraction,
+                              stdout=stdout)
     
-    pass
+    result = interpreter.run_analysis(java_class.name, method_name, args)
+    if type(result) is AnalysisException:
+        return (True, result)
+    else:
+        return (False, None)
 
 
 def run_method(java_class: JavaClass, 

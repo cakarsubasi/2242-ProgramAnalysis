@@ -229,7 +229,7 @@ class ByteCode:
     def perform_get(self, runner: IInterp, opr: Operation, element: StackElement):
         # I am not sure what get does but I am guessing it returns 0 when it succeeds and some else otherwise.
         # So we are just always going to assume that it works.
-        runner.stack.append(StackElement(element.local_variables, element.operational_stack + [self.create_value(0)], element.counter.next_counter()))
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack + [self.create_value(0, "integer")], element.counter.next_counter()))
 
     def perform_array_length(self, runner: IInterp, opr: Operation, element: StackElement):
         arr_address = element.operational_stack.pop().get_value()

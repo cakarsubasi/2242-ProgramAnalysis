@@ -4,6 +4,7 @@ from .data_structures import Value, AnalysisExceptionTypes, AnalysisException
 
 INT_MINIMUM = -2147483648
 INT_MAXIMUM = 2147483647
+RANGE_TYPE_NAME = "range_list"
 
 class Range:
     from_: int
@@ -14,19 +15,14 @@ class Range:
         self.to = max(a, b)
 
 class RangeValue(Value):
-    type_name = "range_list"
-
     def __init__(self, value: Any, type_name: str = "void"):
         if type(value) is RangeValue:
             raise Exception("Values shouldn't be nested!")
-        if type(value) in [int, float]:
-            self._value = [Range(value, value)]
-            self.type_name = self.type_name
-        elif self.type_name == self.type_name:
+        if type_name == RANGE_TYPE_NAME:
             self._value = value
-            self.type_name = self.type_name
+            self.type_name = RANGE_TYPE_NAME
         else:
-            super.__init__(value, type_name)
+            super().__init__(value, type_name)
     
     def __truediv__(self, other: 'RangeValue'):
         for range in other._value:
@@ -42,9 +38,9 @@ class RangeValue(Value):
             for right_range in other._value:
                 result.append(Range(left_range.from_ / right_range.to, left_range.to / right_range.from_))
 
-        return RangeValue(result, self.type_name)
+        return RangeValue(result, RANGE_TYPE_NAME)
     
-    def __sub__(self, other: 'Value'):
+    def __sub__(self, other: 'RangeValue'):
         result = []
         for left_range in self._value:
             for right_range in other._value:
@@ -64,7 +60,7 @@ class RangeValue(Value):
                 else:  
                     result.append(Range(result_from, result_to))
 
-        return RangeValue(result, self.type_name)
+        return RangeValue(result, RANGE_TYPE_NAME)
 
 
 class RangeAbstraction(ByteCode):
@@ -76,11 +72,11 @@ class RangeAbstraction(ByteCode):
         return RangeValue(value, type_name)
     
     def create_int_argument(self):
-        return RangeValue([Range(INT_MINIMUM, INT_MAXIMUM)], RangeValue.type_name)
+        return RangeValue([Range(INT_MINIMUM, INT_MAXIMUM)], RANGE_TYPE_NAME)
     
     def create_float_argument(self):
         # NOTE: Floats are weird so this is just the same as ints
-        return RangeValue([Range(INT_MINIMUM, INT_MAXIMUM)], RangeValue.type_name)
+        return RangeValue([Range(INT_MINIMUM, INT_MAXIMUM)], RANGE_TYPE_NAME)
     
     def perform_div(self, runner: IInterp, opr: Operation, element: StackElement):
         second = element.operational_stack.pop()

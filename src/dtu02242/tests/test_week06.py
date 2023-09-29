@@ -148,36 +148,30 @@ class TestArithmetics:
     def test_alwaysThrows1(self):
         # No arguments
         # Always throws InvalidOperationException
-        result = run_method_analysis(self.java_class, "alwaysThrows1")
-        expected = AnalysisResult(NeverReturn())
-        expected.errors.append(AnalysisError(self.common_ex, Assumption(), None))
+        _, result = run_method_analysis(self.java_class, "alwaysThrows1")
+        expected = AnalysisException(AnalysisExceptionTypes.ArithmeticException)
         assert result == expected
 
     def test_alwaysThrows2(self):
         # 1 argument
         # Always throws InvalidOperationException regardless of argument
-        result = run_method_analysis(self.java_class, "alwaysThrows2")
-        expected = AnalysisResult(NeverReturn())
-        expected.errors.append(AnalysisError(self.common_ex, Assumption(), None))
+        _, result = run_method_analysis(self.java_class, "alwaysThrows2")
+        expected = AnalysisException(AnalysisExceptionTypes.ArithmeticException)
         assert result == expected
 
     def test_alwaysThrows3(self):
         # 2 arguments
         # Throws invalid operation exception if and only if argument 2 is zero
-        result = run_method_analysis(self.java_class, "alwaysThrows3")
-        expected = AnalysisResult(MaybeReturn())
-        assumption = Assumption() # assumption that argument2 is zero
-        expected.errors.append(AnalysisError(self.common_ex, assumption, None))
+        _, result = run_method_analysis(self.java_class, "alwaysThrows3")
+        expected = AnalysisException(AnalysisExceptionTypes.ArithmeticException)
         assert result == expected
 
     def test_alwaysThrows4(self):
         # 2 arguments
         # throws AssertionError if argument 1 above -1 and argument 2 above 1
         # throws InvalidOperationException if argument 2 is zero
-        result = run_method_analysis(self.java_class, "alwaysThrows3")
-        expected = AnalysisResult(MaybeReturn())
-        assumption = Assumption() # Maybe need to combine assumptions
-        expected.errors.append(AnalysisError(self.common_ex, assumption, None))
+        _, result = run_method_analysis(self.java_class, "alwaysThrows4")
+        expected = AnalysisException(AnalysisExceptionTypes.ArithmeticException)
         assert result == expected
 
     def test_alwaysThrows5(self):

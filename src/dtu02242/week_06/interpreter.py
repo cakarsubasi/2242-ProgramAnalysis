@@ -137,6 +137,9 @@ def run_method_analysis(java_class: JavaClass,
         if arg["type"]["base"] == "int":
             value = abstraction.create_int_argument()
             args.append(value)
+        if arg["type"]["base"] == "float":
+            value = abstraction.create_float_argument()
+            args.append(value)
 
     result = interpreter.run_analysis(java_class.name, method_name, args)
     if type(result) is AnalysisException:

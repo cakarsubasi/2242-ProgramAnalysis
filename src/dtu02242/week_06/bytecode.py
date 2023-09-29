@@ -80,6 +80,10 @@ class ByteCode:
         # This is be implemented by all abstractions
         pass
 
+    def create_float_argument(self):
+        # This is be implemented by all abstractions
+        pass
+
     def create_value(self, value: Any, type_name: str = "void") -> Value:
         return Value(value, type_name)
         

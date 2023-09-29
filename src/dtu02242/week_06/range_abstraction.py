@@ -2,6 +2,9 @@ from typing import Any
 from .bytecode import ByteCode, IInterp, Operation, StackElement
 from .data_structures import Value, AnalysisExceptionTypes, AnalysisException
 
+INT_MINIMUM = -2147483648
+INT_MAXIMUM = 2147483647
+
 class Range:
     from_: int
     to: int
@@ -16,7 +19,7 @@ class RangeValue(Value):
     def __init__(self, value: Any, type_name: str = "void"):
         if type(value) is RangeValue:
             raise Exception("Values shouldn't be nested!")
-        if type(value) is int:
+        if type(value) in [int, float]:
             self._value = [Range(value, value)]
             self.type_name = self.type_name
         elif self.type_name == self.type_name:
@@ -59,7 +62,11 @@ class RangeAbstraction(ByteCode):
         return RangeValue(value, type_name)
     
     def create_int_argument(self):
-        return RangeValue([Range(-2147483648, 2147483647)], RangeValue.type_name)
+        return RangeValue([Range(INT_MINIMUM, INT_MAXIMUM)], RangeValue.type_name)
+    
+    def create_float_argument(self):
+        # NOTE: Floats are weird so this is just the same as ints
+        return RangeValue([Range(INT_MINIMUM, INT_MAXIMUM)], RangeValue.type_name)
     
     def perform_div(self, runner: IInterp, opr: Operation, element: StackElement):
         second = element.operational_stack.pop()

@@ -40,6 +40,14 @@ class RangeValue(Value):
                 result.append(Range(left_range.from_ / right_range.to, left_range.to / right_range.from_))
 
         return RangeValue(result, self.type_name)
+    
+    def __sub__(self, other: 'Value'):
+        result = []
+        for left_range in self._value:
+            for right_range in other._value:
+                result.append(Range(left_range.from_ - right_range.to, left_range.to - right_range.from_))
+
+        return RangeValue(result, self.type_name)
 
 
 class RangeAbstraction(ByteCode):

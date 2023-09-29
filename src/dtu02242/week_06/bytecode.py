@@ -53,7 +53,8 @@ class ByteCode:
     "load": self.perform_load,
     "binary-add": self.perform_add,
     "binary-sub": self.perform_sub,
-    "binary-mul": self.perform_multiplication,
+    "binary-mul": self.perform_mul,
+    "binary-div": self.perform_div,
     "if-lt": self.perform_strictly_less,
     "if-le": self.perform_less_or_equal,
     "if-gt": self.perform_strictly_greater,
@@ -103,6 +104,18 @@ class ByteCode:
         second = element.operational_stack.pop()
         first = element.operational_stack.pop()
         result = first - second
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
+
+    def perform_div(self, runner: IInterp, opr: Operation, element: StackElement):
+        second = element.operational_stack.pop()
+        first = element.operational_stack.pop()
+        result = first / second
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
+        
+    def perform_mul(self, runner: IInterp, opr: Operation, element: StackElement):
+        second = element.operational_stack.pop()
+        first = element.operational_stack.pop()
+        result = first * second
         runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
 
     def perform_strictly_less(self, runner: IInterp, opr: Operation, element: StackElement):
@@ -174,12 +187,6 @@ class ByteCode:
         value = element.local_variables[opr.index]
         local_vars[opr.index] = value + Value(opr.amount)
         runner.stack.append(StackElement(local_vars, element.operational_stack, element.counter.next_counter()))
-
-    def perform_multiplication(self, runner: IInterp, opr: Operation, element: StackElement):
-        second = element.operational_stack.pop()
-        first = element.operational_stack.pop()
-        result = first * second
-        runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
 
     def perform_goto(self, runner: IInterp, opr: Operation, element: StackElement):
         next_counter = Counter(element.counter.method_name, opr.target)

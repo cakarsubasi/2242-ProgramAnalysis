@@ -41,7 +41,7 @@ class Value:
     def __mul__(self, other: 'Value'):
         return Value(self._value * other._value, self.type_name)
 
-    def __div__(self, other: 'Value'):
+    def __truediv__(self, other: 'Value'):
         return Value(self._value / other._value, self.type_name)
 
     def __eq__(self, other: 'Value'):

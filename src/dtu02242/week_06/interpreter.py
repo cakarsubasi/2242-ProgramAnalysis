@@ -132,6 +132,12 @@ def run_method_analysis(java_class: JavaClass,
                               bytecode_interpreter=abstraction,
                               stdout=stdout)
     
+    method_args = interpreter.get_class(java_class.name, method_name).get_method(method_name)["params"]
+    for arg in method_args:
+        if arg["type"]["base"] == "int":
+            value = abstraction.create_int_argument()
+            args.append(value)
+
     result = interpreter.run_analysis(java_class.name, method_name, args)
     if type(result) is AnalysisException:
         return (True, result)

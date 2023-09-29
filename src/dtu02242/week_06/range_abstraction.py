@@ -50,6 +50,9 @@ class RangeAbstraction(ByteCode):
     def create_value(self, value: Any, type_name: str = "void") -> Value:
         return RangeValue(value, type_name)
     
+    def create_int_argument(self):
+        return RangeValue([Range(-2147483648, 2147483647)], RangeValue.type_name)
+    
     def perform_div(self, runner: IInterp, opr: Operation, element: StackElement):
         second = element.operational_stack.pop()
         first = element.operational_stack.pop()

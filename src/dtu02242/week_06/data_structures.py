@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
+from enum import Enum
 
 def wrap(arr: List[Any]) -> List['Value']:
     """
@@ -118,11 +119,15 @@ class ArrayValue(Value):
         return self._capacity
 
 
-# TODO: Write Abstractions here
+class AnalysisExceptionTypes(Enum):
+    IndexOutOfBoundsException = 0
+    ArithmeticException  = 1
+    NullPointerException = 2
+    UnsupportedOperationException = 3
 
-class Range:
-    pass
-    # Gotta figure out a good range abstraction
+class AnalysisException(Value):
+    def __init__(self, exception_type: AnalysisExceptionTypes):
+        super().__init__(exception_type, "analysis_exception")
 
 @dataclass
 class NeverReturn:

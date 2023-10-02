@@ -1,53 +1,34 @@
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
-from .parser import JavaClass, JavaProgram
 from pydoc import locate
 import uuid
 import json
 
-@dataclass
-class IntValue:
-    # Note that python ints are bigints
-    # and you may wish to use ctypes
-    # for a more Java like int representation
-    value: int
+JsonDict = Dict[str, Any]
 
-@dataclass
-class ShortValue:
-    value: int
+class JavaClass:
+    def __init__(self, json_dict: JsonDict) -> None:
+        self.name = json_dict['name']
+        self.json_dict = json_dict
 
-@dataclass
-class BoolValue:
-    value: bool
-
-@dataclass
-class ByteValue:
-    # TODO: use a better byte
-    value: int
+    def get_methods(self) -> List[JsonDict]:
+        methods: List[JsonDict] = self.json_dict["methods"]
+        return methods
+    
+    def get_method(self, name: str) -> Optional[JsonDict]:
+        methods = self.get_methods()
+        for method in methods:
+            if method["name"] == name:
+                return method
+        return None
+    
+    def __str__(self) -> str:
+        return self.json_dict["name"]
 
 @dataclass
 class ArrayValue:
     length: int
-    value: List[Any]
-
-@dataclass
-class RefValue:
-    # refvalue should contain a pointer
-    # to another structure
-    value: Any 
-    # Also keep in mind that to emulate Java
-    # behavior, we need reference counting
-    # semantics but right now it is likely
-    # simpler to just leak all memory
-
-@dataclass
-class ClassValue:
-    class_name: str
-    fields: Dict[str, RefValue]
-    # strictly speaking, we do not have to store the method information
-
-# JavaValue can be these things, but feel free to add more
-JavaValue = IntValue | BoolValue | ByteValue | ShortValue | RefValue | None
+    value: List[Any] # The Any here is not a Value
 
 class Value:
     def __init__(self, value: Any, type_name: str = None):
@@ -56,11 +37,6 @@ class Value:
             self.type_name = type(value).__name__ 
         else:
             self.type_name = type_name
-
-class JavaError:
-    # Need a way of propagating errors
-    # Probably best to discuss how to implement this before deciding on one
-    pass
 
 class Counter:
 
@@ -101,8 +77,8 @@ class Operation:
 
 class Interpreter:
 
-    def __init__(self, java_class: JavaClass, method_name, method_args: List[Value], memory: Dict[str, JavaValue] = {}):
-        self.memory: Dict[str, JavaValue] = memory
+    def __init__(self, java_class: JavaClass, method_name, method_args: List[Value], memory: Dict[str, Value] = {}):
+        self.memory: Dict[str, Value] = memory
         self.stack: List[StackElement] = [StackElement(method_args, [], Counter(method_name, 0))]
         self.java_class = java_class
 
@@ -329,11 +305,7 @@ method_mapper = {
     "print": perform_print,
 }
 
-def run_program(java_program: JavaProgram):
-    # Ignore this for now
-    raise NotImplementedError
-
-def run_method(java_class: JavaClass, method_name: str, method_args: List[JavaValue], environment: Optional[JavaProgram]=None) -> JavaValue | JavaError:
+def run_method(java_class: JavaClass, method_name: str, method_args: List[Value]) -> Value | JavaError:
     # This is the entry point, this function should create an
     # Interpreter instance, and then run it with the given
     # properties. It should raise an error

@@ -11,9 +11,9 @@ class ConcolicValue:
 
     def __repr__(self) -> str:
         return f"{self.concrete} ({self.symbolic})"
-    
+
     @classmethod
-    def from_const(cls, _value: int | bool) -> 'ConcolicValue':
+    def from_const(cls, _value: int | bool) -> "ConcolicValue":
         """
         Create a ConcolicValue from a constant
         @return: ConcolicValue
@@ -23,28 +23,28 @@ class ConcolicValue:
         if isinstance(_value, int):
             return ConcolicValue(_value, z3.IntVal(_value))
         raise Exception(f"unknown const: {_value}")
-    
-    def compare(self, other: 'ConcolicValue', op_name: str) -> 'ConcolicValue':
+
+    def compare(self, other: "ConcolicValue", op_name: str) -> "ConcolicValue":
         """
         Handle comparison operations (eq, ne, gt, ge, le, lt) etc.
         @return: ConcolicValue result
         """
         # Creating an entire dictionary to check 4 values is cringe
         if op_name == "ne":
-            opr = "__ne__" # name must match Python op names
+            opr = "__ne__"  # name must match Python op names
         elif op_name == "gt":
             opr = "__gt__"
         elif op_name == "ge":
             opr = "__ge__"
         else:
             raise NotImplementedError(f"Unknown operation: {op_name}")
-        
+
         return ConcolicValue(
             getattr(self.concrete, opr)(other.concrete),
-            z3.simplify(getattr(self.symbolic, opr)(other.symbolic))
-            )
-    
-    def binary(self, other: 'ConcolicValue', op_name: str) -> 'ConcolicValue':
+            z3.simplify(getattr(self.symbolic, opr)(other.symbolic)),
+        )
+
+    def binary(self, other: "ConcolicValue", op_name: str) -> "ConcolicValue":
         """
         Handle binary operations (add, sub, mul, div) etc.
         @return: ConcolicValue result
@@ -58,18 +58,15 @@ class ConcolicValue:
             return ConcolicValue(
                 self.concrete // other.concrete,
                 # Is this correct?
-                z3.simplify(self.symbolic / other.symbolic)
+                z3.simplify(self.symbolic / other.symbolic),
             )
         else:
             raise NotImplementedError(f"Unknown operation: {op_name}")
-        
+
         return ConcolicValue(
             getattr(self.concrete, opr)(other.concrete),
-            z3.simplify(getattr(self.symbolic, opr)(other.symbolic))
+            z3.simplify(getattr(self.symbolic, opr)(other.symbolic)),
         )
-
-
-
 
 
 @dataclass(frozen=True)
@@ -90,7 +87,7 @@ class State:
         Pop a value from the stack and return it
         """
         return self.stack.pop()
-    
+
     def load(self, index: int) -> None:
         """
         Load the local in the given index to the stack
@@ -112,11 +109,16 @@ class Bytecode:
         return self.dictionary[__name]
 
     def __repr__(self) -> str:
-        return f"bc:{self.opr}" + " { " + ", ".join(
-            f"{k}: {v}"
-            for k, v in self.dictionary.items()
-            if k != "opr" and k != "offset"
-        ) + " }"
+        return (
+            f"bc:{self.opr}"
+            + " { "
+            + ", ".join(
+                f"{k}: {v}"
+                for k, v in self.dictionary.items()
+                if k != "opr" and k != "offset"
+            )
+            + " }"
+        )
 
 
 def concolic(method: JsonDict, max_depth=1000, debug_print=False):
@@ -153,10 +155,8 @@ def concolic(method: JsonDict, max_depth=1000, debug_print=False):
                 print(path)
                 print(bc)
 
-
             if bc.opr == "get" and bc.field["name"] == "$assertionsDisabled":
                 state.push(ConcolicValue.from_const(False))
-            
 
             # branching operations
             elif bc.opr == "ifz":
@@ -191,6 +191,8 @@ def concolic(method: JsonDict, max_depth=1000, debug_print=False):
                     result = "Divide by 0"
                     path.append(value2.symbolic == 0)
                     break
+                else:
+                    path.append(z3.simplify(z3.Not(value2.symbolic == 0)))
                 value_r = value1.binary(value2, bc.operant)
                 state.push(value_r)
             elif bc.opr == "incr":
@@ -199,7 +201,9 @@ def concolic(method: JsonDict, max_depth=1000, debug_print=False):
                 state.push(value.binary(ConcolicValue.from_const(bc.amount), "add"))
                 state.store(bc.index)
             # misc
-            elif bc.opr == "new" and bc.dictionary["class"] == "java/lang/AssertionError":
+            elif (
+                bc.opr == "new" and bc.dictionary["class"] == "java/lang/AssertionError"
+            ):
                 result = "AssertionError"
                 break
             elif bc.opr == "return":
@@ -219,12 +223,12 @@ def concolic(method: JsonDict, max_depth=1000, debug_print=False):
                 state.push(ConcolicValue.from_const(bc.value["value"]))
             else:
                 raise NotImplementedError(f"Unsupported bytecode: {bc}")
-        else: # The incredibly rare for-else statement!
+        else:  # The incredibly rare for-else statement!
             result = "Out of Iterations"
-    
+
         path_constraint = z3.simplify(z3.And(*path))
         print(f"{inputs} -> {result} | {path_constraint}")
-        
+
         solver.add(z3.Not(path_constraint))
 
 

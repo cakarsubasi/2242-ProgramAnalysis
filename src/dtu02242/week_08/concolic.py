@@ -2,6 +2,21 @@ import z3
 from typing import Dict, Any, List
 from dtu02242.week_08.parser import JsonDict, JavaClass
 from dataclasses import dataclass
+from enum import Enum
+
+class AnalysisResultValue(Enum):
+    No = 0
+    Maybe = 1
+    AssertionError = 2
+    IndexOutOfBoundsExecption = 3
+    ArithmeticException = 4
+    NullPointerException = 5
+    UnsupportedOperationException = 6
+
+@dataclass(frozen=True)
+class AnalysisResult:
+    exception: AnalysisResultValue
+    input: z3.ExprRef
 
 
 @dataclass(frozen=True)
@@ -128,6 +143,8 @@ def concolic(method: JsonDict, max_depth=1000, debug_print=False):
     params = [z3.Int(f"p{i}") for i, _ in enumerate(method["params"])]
     bytecode = [Bytecode(b) for b in method["code"]["bytecode"]]
 
+    terminations: List[AnalysisResultValue, z3.ExprRef] = []
+
     # With no assumptions, z3 will return sat
     while solver.check() == z3.sat:
         model = solver.model()
@@ -188,7 +205,7 @@ def concolic(method: JsonDict, max_depth=1000, debug_print=False):
                 value2 = state.pop()
                 value1 = state.pop()
                 if bc.operant == "div" and value2.concrete == 0:
-                    result = "Divide by 0"
+                    result = AnalysisResultValue.ArithmeticException
                     path.append(value2.symbolic == 0)
                     break
                 else:
@@ -204,14 +221,14 @@ def concolic(method: JsonDict, max_depth=1000, debug_print=False):
             elif (
                 bc.opr == "new" and bc.dictionary["class"] == "java/lang/AssertionError"
             ):
-                result = "AssertionError"
+                result = AnalysisResultValue.AssertionError
                 break
             elif bc.opr == "return":
                 if bc.type is None:
-                    result = f"Return: void"
+                    result = AnalysisResultValue.No
                 else:
                     value = state.pop()
-                    result = f"Return: {value}"
+                    result = AnalysisResultValue.No
                 break
 
             # stack and local operations
@@ -224,12 +241,24 @@ def concolic(method: JsonDict, max_depth=1000, debug_print=False):
             else:
                 raise NotImplementedError(f"Unsupported bytecode: {bc}")
         else:  # The incredibly rare for-else statement!
-            result = "Out of Iterations"
+            result = AnalysisResultValue.Maybe
 
         path_constraint = z3.simplify(z3.And(*path))
+        terminations.append((result, path_constraint))
         print(f"{inputs} -> {result} | {path_constraint}")
 
         solver.add(z3.Not(path_constraint))
+    
+    for result, path_constraint in terminations:
+        if result not in [AnalysisResultValue.No, AnalysisResultValue.AssertionError]:
+            arg_solver = z3.Solver()
+            arg_solver.add(path_constraint)
+            arg_solver.check()
+            arg_model = arg_solver.model()
+            args = [arg_model.eval(p, model_completion=True).as_long() for p in params]
+            return AnalysisResult(result, args)
+    else:
+        return AnalysisResult(AnalysisResultValue.No, [])
 
 
 if __name__ == "__main__":

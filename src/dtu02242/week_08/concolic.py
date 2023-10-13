@@ -136,7 +136,9 @@ class Bytecode:
         )
 
 
-def concolic(method: JsonDict, max_depth=1000, debug_print=False):
+def concolic(program: JavaClass, method_name: str, max_depth=1000, debug_print=False):
+    method = program.get_method(method_name)
+    
     solver = z3.Solver()
 
     # TODO: Cover things other than ints
@@ -270,5 +272,5 @@ if __name__ == "__main__":
     ) as fp:
         json_dict = json.load(fp)
         program = JavaClass(json_dict)
-    concolic(program.get_method("itDependsOnLattice3"))
-    pass
+    result = concolic(program, "alwaysThrows5")
+    print(result)

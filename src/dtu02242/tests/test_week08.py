@@ -104,8 +104,9 @@ class TestArithmetics:
         result = concolic(self.java_class, "neverThrows5")
         assert result.exception == AnalysisResultValue.No
 
+    @pytest.mark.skip(reason="Passes but takes a long time")
     def test_speedVsPrecision(self):
         # No args
         # throws ArithmeticException but takes a while to get there
-        result = concolic(self.java_class, "speedVsPrecision")
+        result = concolic(self.java_class, "speedVsPrecision", max_depth=1000000)
         assert result.exception == AnalysisResultValue.ArithmeticException

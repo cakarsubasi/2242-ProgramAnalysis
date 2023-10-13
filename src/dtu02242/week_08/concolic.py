@@ -47,10 +47,16 @@ class ConcolicValue:
         # Creating an entire dictionary to check 4 values is cringe
         if op_name == "ne":
             opr = "__ne__"  # name must match Python op names
+        elif op_name == "eq":
+            opr = "__eq__"
         elif op_name == "gt":
             opr = "__gt__"
         elif op_name == "ge":
             opr = "__ge__"
+        elif op_name == "le":
+            opr = "__le__"
+        elif op_name == "lt":
+            opr = "__lt__"
         else:
             raise NotImplementedError(f"Unknown operation: {op_name}")
 
@@ -68,6 +74,8 @@ class ConcolicValue:
             opr = "__sub__"
         elif op_name == "add":
             opr = "__add__"
+        elif op_name == "mul":
+            opr = "__mul__"
         elif op_name == "div":
             opr = "__div__"
             return ConcolicValue(
@@ -219,6 +227,9 @@ def concolic(program: JavaClass, method_name: str, max_depth=1000, debug_print=F
                 value = state.pop()
                 state.push(value.binary(ConcolicValue.from_const(bc.amount), "add"))
                 state.store(bc.index)
+            elif bc.opr == "negate":
+                value = state.pop()
+                state.push(value.binary(ConcolicValue.from_const(-1), "mul"))
             # misc
             elif (
                 bc.opr == "new" and bc.dictionary["class"] == "java/lang/AssertionError"

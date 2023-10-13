@@ -1,8 +1,14 @@
 import z3
+import random
 from typing import Dict, Any, List
-from dtu02242.week_08.parser import JsonDict, JavaClass
+# from dtu02242.week_08.parser import JsonDict, JavaClass
 from dataclasses import dataclass
 from enum import Enum
+
+if __name__ == "__main__":
+    from parser import JsonDict, JavaClass
+else:
+    from dtu02242.week_08.parser import JsonDict, JavaClass
 
 class AnalysisResultValue(Enum):
     No = 0
@@ -91,6 +97,37 @@ class ConcolicValue:
             z3.simplify(getattr(self.symbolic, opr)(other.symbolic)),
         )
 
+@dataclass(frozen=True)
+class ConcolicList:
+    elements: List[ConcolicValue]
+    length: ConcolicValue
+
+    @classmethod
+    def from_conconic(cls, _length: "ConcolicValue", _type: str) -> "ConcolicValue":
+        """
+        Create a ConcolicValue from a list
+        @return: ConcolicValue
+        """
+        if isinstance(_length.concrete, int):
+            if _type == "int":
+                return ConcolicList(
+                    [ConcolicValue.from_const(0) for _ in range(_length.concrete)],
+                    _length
+                )
+            elif _type == "bool":
+                return ConcolicList(
+                    [ConcolicValue.from_const(False) for _ in range(_length.concrete)],
+                    _length
+                )
+            else:
+                raise Exception(f"Unknown type for array: {_type}")
+        raise Exception(f"_length is not an int: {_length}")
+
+    def __getitem__(self, index: ConcolicValue):
+        return self.elements[index.concrete]
+
+    def __setitem__(self, index: ConcolicValue, value: ConcolicValue):
+        self.elements[index.concrete] = value
 
 @dataclass(frozen=True)
 class State:
@@ -145,12 +182,24 @@ class Bytecode:
 
 
 def concolic(program: JavaClass, method_name: str, max_depth=1000, debug_print=False):
+    random.seed(1)
     method = program.get_method(method_name)
-    
+    memory: Dict[int, ConcolicList] = {}
+
     solver = z3.Solver()
 
     # TODO: Cover things other than ints
-    params = [z3.Int(f"p{i}") for i, _ in enumerate(method["params"])]
+    params = []
+    for i, param in enumerate(method["params"]):
+        _type = param["type"]
+        if "base" in _type and _type["base"] in ["int", "float"]:
+            params.append(z3.Int(f"p{i}"))
+        elif "kind" in _type and _type["kind"] == "array" and _type["type"]["base"] in ["int", "float"]:
+            params.append(z3.Int(f"a_i{i}"))
+        elif "kind" in _type and _type["kind"] == "array" and _type["type"]["base"] == "bool":
+            params.append(z3.Bool(f"a_b{i}"))
+        else:
+            raise Exception(f"Unknown parameter type: {_type}")
     bytecode = [Bytecode(b) for b in method["code"]["bytecode"]]
 
     terminations: List[AnalysisResultValue, z3.ExprRef] = []
@@ -161,13 +210,22 @@ def concolic(program: JavaClass, method_name: str, max_depth=1000, debug_print=F
 
         # Create input state
         inputs = [model.eval(p, model_completion=True).as_long() for p in params]
-        state = State(
-            {
-                idx: ConcolicValue(conc, symb)
-                for idx, (conc, symb) in enumerate(zip(inputs, params))
-            },
-            [],
-        )
+        state = State({}, [])
+        for idx, (conc, symb) in enumerate(zip(inputs, params)):
+            a = str(symb)
+            if str(symb).startswith("p"):
+                state.locals[idx] = ConcolicValue(conc, symb)
+            elif str(symb).startswith("a_i"):
+                memory_address = random.randint(0, 2**128)
+                array = ConcolicList.from_conconic(ConcolicValue(conc, symb), "int")
+                memory[memory_address] = array
+                state.locals[idx] = ConcolicValue.from_const(memory_address)
+            elif str(symb).startswith("a_b"):
+                memory_address = random.randint(0, 2**128)
+                array = ConcolicList.from_conconic(ConcolicValue(conc, symb), "bool")
+                memory[memory_address] = array
+                state.locals[idx] = ConcolicValue.from_const(memory_address)
+
         pc = 0
         path = []
 
@@ -182,8 +240,11 @@ def concolic(program: JavaClass, method_name: str, max_depth=1000, debug_print=F
                 print(path)
                 print(bc)
 
-            if bc.opr == "get" and bc.field["name"] == "$assertionsDisabled":
-                state.push(ConcolicValue.from_const(False))
+            if bc.opr == "get":
+                if bc.field["name"] == "$assertionsDisabled":
+                    state.push(ConcolicValue.from_const(False))
+                elif bc.field["type"]["name"] == "java/io/PrintStream":
+                    continue
 
             # branching operations
             elif bc.opr == "ifz":
@@ -230,12 +291,59 @@ def concolic(program: JavaClass, method_name: str, max_depth=1000, debug_print=F
             elif bc.opr == "negate":
                 value = state.pop()
                 state.push(value.binary(ConcolicValue.from_const(-1), "mul"))
+            # array operations
+            elif bc.opr == "newarray":
+                size = state.pop()
+                memory_address = random.randint(0, 2**128)
+                array = ConcolicList.from_conconic(size, bc.type)
+                memory[memory_address] = array
+                state.push(ConcolicValue.from_const(memory_address))
+            elif bc.opr == "array_store":
+                value_to_store = state.pop()
+                index = state.pop()
+                arr_address = state.pop()
+                arr = memory[arr_address.concrete]
+                if index.concrete < 0:
+                    result = AnalysisResultValue.IndexOutOfBoundsExecption
+                    path.append(index.symbolic < 0)
+                    break
+                if index.concrete >= arr.length.concrete:
+                    result = AnalysisResultValue.IndexOutOfBoundsExecption
+                    path.append(index.symbolic >= arr.length.symbolic)
+                    break
+                path.append(z3.simplify(z3.Not(index.symbolic < 0)))
+                path.append(z3.simplify(z3.Not(index.symbolic >= arr.length.symbolic)))
+                memory[arr_address.concrete][index] = value_to_store
+            elif bc.opr == "array_load":
+                index = state.pop()
+                arr_address = state.pop()
+                arr = memory[arr_address.concrete]
+                if index.concrete < 0:
+                    result = AnalysisResultValue.IndexOutOfBoundsExecption
+                    path.append(index.symbolic < 0)
+                    break
+                if index.concrete >= arr.length.concrete:
+                    result = AnalysisResultValue.IndexOutOfBoundsExecption
+                    path.append(index.symbolic >= arr.length.symbolic)
+                    break
+                value = arr[index]
+                path.append(z3.simplify(z3.Not(index.symbolic < 0)))
+                path.append(z3.simplify(z3.Not(index.symbolic >= arr.length.symbolic)))
+                state.push(value)
+            elif bc.opr == "arraylength":
+                arr_address = state.pop()
+                arr_length = memory[arr_address.concrete].length
+                state.push(arr_length)
             # misc
             elif (
                 bc.opr == "new" and bc.dictionary["class"] == "java/lang/AssertionError"
             ):
                 result = AnalysisResultValue.AssertionError
                 break
+            elif bc.opr == "dup":
+                value = state.pop()
+                state.push(value)
+                state.push(value)
             elif bc.opr == "return":
                 if bc.type is None:
                     result = AnalysisResultValue.No
@@ -243,6 +351,9 @@ def concolic(program: JavaClass, method_name: str, max_depth=1000, debug_print=F
                     value = state.pop()
                     result = AnalysisResultValue.No
                 break
+            elif bc.opr == "invoke":
+                # We do nothing for now
+                pass
 
             # stack and local operations
             elif bc.opr == "load":

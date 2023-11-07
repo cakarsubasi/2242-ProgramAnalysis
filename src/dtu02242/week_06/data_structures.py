@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple
+from enum import Enum
 
 def wrap(arr: List[Any]) -> List['Value']:
     """
@@ -41,7 +42,7 @@ class Value:
     def __mul__(self, other: 'Value'):
         return Value(self._value * other._value, self.type_name)
 
-    def __div__(self, other: 'Value'):
+    def __truediv__(self, other: 'Value'):
         return Value(self._value / other._value, self.type_name)
 
     def __eq__(self, other: 'Value'):
@@ -118,11 +119,15 @@ class ArrayValue(Value):
         return self._capacity
 
 
-# TODO: Write Abstractions here
+class AnalysisExceptionTypes(Enum):
+    IndexOutOfBoundsException = 0
+    ArithmeticException  = 1
+    NullPointerException = 2
+    UnsupportedOperationException = 3
 
-class Range:
-    pass
-    # Gotta figure out a good range abstraction
+class AnalysisException(Value):
+    def __init__(self, exception_type: AnalysisExceptionTypes):
+        super().__init__(exception_type, "analysis_exception")
 
 @dataclass
 class NeverReturn:
@@ -143,10 +148,10 @@ class Assumption:
     # working constraints (assertions or otherwise) or
     # conditions required for a certain event to happen
     def __init__(self) -> None:
-        raise NotImplementedError()
+        pass
 
     def __eq__(self, __value: object) -> bool:
-        raise NotImplementedError()
+        return True
 
 @dataclass   
 class AnalysisError:
@@ -168,13 +173,11 @@ class AnalysisError:
 # error_name, constraint(s?), cause (maybe drop this for now)
 
 class AnalysisResult(Value):
-    errors: List[AnalysisError]
-    # Asserts always give the same error so, we only carry the assumption
-    asserts: List[Assumption]
     def __init__(self, return_value: Any , type_name: str = "analysis_result"):
         super().__init__(return_value, type_name)
-        errors = []
-        asserts = []
+        self.errors: List[AnalysisError] = []
+        # Asserts always give the same error so, we only carry the assumption
+        self.asserts: List[Assumption] = []
         # TODO
 
     def __eq__(self, other: 'Value'):

@@ -1,4 +1,4 @@
-from .data_structures import Value, ArrayValue
+from .data_structures import Value, ArrayValue, AnalysisException
 from typing import List, Dict, Any
 import uuid
 
@@ -6,6 +6,7 @@ class IInterp:
     stack: Any
     memory: Any
     stdout: Any
+    exceptions: List[AnalysisException]
 
     def get_class(self, class_name, method_name):
         raise NotImplementedError()
@@ -25,13 +26,13 @@ class StackElement:
         self.counter: Counter = counter
 
 class Operation:
-    def __init__(self, json_doc):
+    def __init__(self, json_doc, value_creator):
         self.offset: int = json_doc["offset"]
         self.opr: str = json_doc["opr"]
         self.type: str = json_doc["type"] if "type" in json_doc else None
         self.index: int = json_doc["index"] if "index" in json_doc else None
         self.operant: str = json_doc["operant"] if "operant" in json_doc else None
-        self.value: Value = Value(json_doc["value"]["value"], json_doc["value"]["type"]) if "value" in json_doc else None
+        self.value: Value = value_creator(json_doc["value"]["value"], json_doc["value"]["type"]) if "value" in json_doc else None
         self.condition: str = json_doc["condition"] if "condition" in json_doc else None
         self.target: int = json_doc["target"] if "target" in json_doc else None
         self.amount: int = json_doc["amount"] if "amount" in json_doc else None
@@ -53,7 +54,8 @@ class ByteCode:
     "load": self.perform_load,
     "binary-add": self.perform_add,
     "binary-sub": self.perform_sub,
-    "binary-mul": self.perform_multiplication,
+    "binary-mul": self.perform_mul,
+    "binary-div": self.perform_div,
     "if-lt": self.perform_strictly_less,
     "if-le": self.perform_less_or_equal,
     "if-gt": self.perform_strictly_greater,
@@ -74,6 +76,16 @@ class ByteCode:
     "throw": self.peform_throw,
     "print": self.perform_print,
 }
+    def create_int_argument(self):
+        # This is be implemented by all abstractions
+        pass
+
+    def create_float_argument(self):
+        # This is be implemented by all abstractions
+        pass
+
+    def create_value(self, value: Any, type_name: str = "void") -> Value:
+        return Value(value, type_name)
         
     def execute(self, instruction: str, runner: IInterp, opr: Operation, element: StackElement):
         return self.method_mapper[instruction](runner, opr, element)
@@ -81,7 +93,7 @@ class ByteCode:
     def perform_return(self, runner: IInterp, opr: Operation, element: StackElement):
         type = opr.type
         if type == None:
-            return Value(None)
+            return self.create_value(None)
         value = element.operational_stack.pop()
         return value
 
@@ -103,6 +115,18 @@ class ByteCode:
         second = element.operational_stack.pop()
         first = element.operational_stack.pop()
         result = first - second
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
+
+    def perform_div(self, runner: IInterp, opr: Operation, element: StackElement):
+        second = element.operational_stack.pop()
+        first = element.operational_stack.pop()
+        result = first / second
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
+        
+    def perform_mul(self, runner: IInterp, opr: Operation, element: StackElement):
+        second = element.operational_stack.pop()
+        first = element.operational_stack.pop()
+        result = first * second
         runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
 
     def perform_strictly_less(self, runner: IInterp, opr: Operation, element: StackElement):
@@ -153,7 +177,7 @@ class ByteCode:
 
     def perform_less_than_or_equal_zero(self, runner: IInterp, opr: Operation, element: StackElement):
         first = element.operational_stack.pop()
-        second = Value(0, 'integer')
+        second = self.create_value(0, 'integer')
         if first <= second:
             next_counter = Counter(element.counter.method_name, opr.target)
             runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
@@ -162,7 +186,7 @@ class ByteCode:
 
     def perform_not_equal_zero(self, runner: IInterp, opr: Operation, element: StackElement):
         first = element.operational_stack.pop()
-        second = Value(0, 'integer')
+        second = self.create_value(0, 'integer')
         if first != second:
             next_counter = Counter(element.counter.method_name, opr.target)
             runner.stack.append(StackElement(element.local_variables, element.operational_stack, next_counter))
@@ -172,14 +196,8 @@ class ByteCode:
     def perform_increment(self, runner: IInterp, opr: Operation, element: StackElement):
         local_vars = [x for x in element.local_variables]
         value = element.local_variables[opr.index]
-        local_vars[opr.index] = value + Value(opr.amount)
+        local_vars[opr.index] = value + self.create_value(opr.amount)
         runner.stack.append(StackElement(local_vars, element.operational_stack, element.counter.next_counter()))
-
-    def perform_multiplication(self, runner: IInterp, opr: Operation, element: StackElement):
-        second = element.operational_stack.pop()
-        first = element.operational_stack.pop()
-        result = first * second
-        runner.stack.append(StackElement(element.local_variables, element.operational_stack + [result], element.counter.next_counter()))
 
     def perform_goto(self, runner: IInterp, opr: Operation, element: StackElement):
         next_counter = Counter(element.counter.method_name, opr.target)
@@ -188,8 +206,8 @@ class ByteCode:
     def perform_new_array(self, runner: IInterp, opr: Operation, element: StackElement):
         size = element.operational_stack.pop().get_value()
         memory_address = uuid.uuid4()
-        runner.memory[memory_address] = ArrayValue(size, Value(0))
-        value = Value(memory_address)
+        runner.memory[memory_address] = ArrayValue(size, self.create_value(0))
+        value = self.create_value(memory_address)
         runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
     def perform_array_store(self, runner: IInterp, opr: Operation, element: StackElement):
@@ -211,18 +229,18 @@ class ByteCode:
     def perform_get(self, runner: IInterp, opr: Operation, element: StackElement):
         # I am not sure what get does but I am guessing it returns 0 when it succeeds and some else otherwise.
         # So we are just always going to assume that it works.
-        runner.stack.append(StackElement(element.local_variables, element.operational_stack + [Value(0)], element.counter.next_counter()))
+        runner.stack.append(StackElement(element.local_variables, element.operational_stack + [self.create_value(0, "integer")], element.counter.next_counter()))
 
     def perform_array_length(self, runner: IInterp, opr: Operation, element: StackElement):
         arr_address = element.operational_stack.pop().get_value()
         arr_length = runner.memory[arr_address].get_length()
-        value = Value(arr_length)
+        value = self.create_value(arr_length)
         runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
     def perform_new(self, runner: IInterp, opr: Operation, element: StackElement):
         memory_address = uuid.uuid4() # Create random memory access
         runner.memory[memory_address] = opr.class_
-        value = Value(memory_address, "ref")
+        value = self.create_value(memory_address, "ref")
         runner.stack.append(StackElement(element.local_variables, element.operational_stack + [value], element.counter.next_counter()))
 
     def perform_dup(self, runner: IInterp, opr: Operation, element: StackElement):
